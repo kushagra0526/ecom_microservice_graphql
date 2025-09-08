@@ -1,0 +1,21 @@
+{
+    "name": "graphql-gateway",
+    "version": "1.0.0",
+    "description": "GraphQL API Gateway",
+    "main": "src/server.js",
+    "scripts": {
+      "start": "node src/server.js",
+      "test": "jest"
+    },
+    "dependencies": {
+      "apollo-server": "^2.25.2",
+      "axios": "^0.21.1",
+      "dotenv": "^10.0.0",
+      "graphql": "^15.5.1"
+    },
+    "devDependencies": {
+      "jest": "^27.0.6",
+      "apollo-server-testing": "^2.25.2"
+    }
+  }
+  

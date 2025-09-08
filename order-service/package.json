@@ -1,0 +1,20 @@
+{
+    "name": "order-service",
+    "version": "1.0.0",
+    "description": "Order management microservice",
+    "main": "src/app.js",
+    "scripts": {
+        "start": "node src/app.js",
+        "test": "jest"
+    },
+    "dependencies": {
+        "dotenv": "^16.0.0",
+        "express": "^4.19.1",
+        "kafka-node": "^5.0.0",
+        "mongoose": "^6.0.14"
+    },
+    "devDependencies": {
+        "jest": "^27.5.1",
+        "supertest": "^6.3.4"
+    }
+}
