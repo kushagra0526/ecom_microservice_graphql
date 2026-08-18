@@ -13,7 +13,6 @@ The **Ecom Microservice GraphQL** project is a comprehensive e-commerce solution
 - **Kafka Integration**: Asynchronous communication between microservices using Kafka for event-driven architecture.
 - **Docker Support**: Containerized services for easy deployment and scalability.
 
-  
 ## Technologies Used
 
 - Node.js: Backend runtime environment.
@@ -26,12 +25,13 @@ The **Ecom Microservice GraphQL** project is a comprehensive e-commerce solution
 ## Setup Instructions
 
 1. **Clone the Repository**:
+
    ```bash
    git clone https://github.com/yourusername/ecom-microservice-graphql.git
    cd ecom-microservice-graphql
     ```
 
-2.    ## Install Dependencies
+2. ## Install Dependencies
 
 Navigate to each service directory and install the dependencies using the following commands:
 
@@ -39,58 +39,72 @@ Navigate to each service directory and install the dependencies using the follow
 cd user-service
 npm install
  ```
+
 ```bash
 cd ../product-service
 npm install
 ```
+
 ```bash
 cd ../order-service
 npm install
 ```
+
 ```bash
 cd ../graphql-gateway
 npm install
 ```
-3. ## Configure Environment Variables: 
+
+1. ## Configure Environment Variables
+
 Create a .env file in each service directory as needed, or copy the .env.example provided.
 
-## user-service:
+## user-service
+
 ```bash
-MONGODB_URI=mongodb://mongodb:27017/user-service
+MONGO_URI=mongodb://mongodb:27017/user-service
 PORT=3001
 JWT_SECRET=your_jwt_secret_key_here
-KAFKA_BROKER=kafka:9092
+KAFKA_BROKER=kafka:29092
 ```
 
-## product-service:
+## product-service
+
 ```bash
-MONGODB_URI=mongodb://mongodb:27017/user-service
-PORT=3001
+MONGO_URI=mongodb://mongodb:27017/product-service
+PORT=3002
 JWT_SECRET=your_jwt_secret_key_here
-KAFKA_BROKER=kafka:9092
+KAFKA_BROKER=kafka:29092
 ```
 
-## order-service:
+## order-service
+
 ```bash
 MONGODB_URI=mongodb://mongodb:27017/order-service
 PORT=3003
+MONGO_URI=mongodb://mongodb:27017/order-service
+PORT=3003
 JWT_SECRET=your_jwt_secret_key_here
-KAFKA_BROKER=kafka:9092
+KAFKA_BROKER=kafka:29092
 ```
 
-## graphql-gateway:
+## graphql-gateway
+
 ```bash
 PORT=4000
-KAFKA_BROKER=kafka:9092
+KAFKA_BROKER=kafka:29092
+USER_SERVICE_URL=http://user-service:3001
+PRODUCT_SERVICE_URL=http://product-service:3002
+ORDER_SERVICE_URL=http://order-service:3003
 ```
 
-4.  ## Start Services: Use Docker Compose to start all services:
+1. ## Start Services: Use Docker Compose to start all services
 
 ```bash
 docker-compose up -d
 ```
 
-5. ## Access the Services:
+1. ## Access the Services
 
 User Service
 
@@ -116,13 +130,9 @@ GraphQL Gateway:
 http://localhost:4000/graphql
 ```
 
-
-
-
 ## Testing
 
 Use Postman or a similar tool to test the endpoints for user registration, product management, and order management.
-
 
 ## Project Structure
 

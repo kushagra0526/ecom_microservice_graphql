@@ -4,11 +4,10 @@
   "description": "Microservices architecture for an e-commerce application with GraphQL gateway.",
   "main": "index.js",
   "scripts": {
-    "start": "node src/app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "Your Name",
+  "author": "Kushagra Pratap Singh",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.0",

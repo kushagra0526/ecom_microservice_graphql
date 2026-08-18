@@ -3,7 +3,7 @@ const kafka = require('kafka-node');
 const kafkaClient = new kafka.KafkaClient({ kafkaHost: process.env.KAFKA_BROKER });
 const consumer = new kafka.Consumer(
   kafkaClient,
-  [{ topic: 'order_created', partition: 0 }],
+  [{ topic: 'order-events', partition: 0 }],
   { autoCommit: true }
 );
 

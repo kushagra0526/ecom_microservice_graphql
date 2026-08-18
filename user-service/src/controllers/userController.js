@@ -1,5 +1,6 @@
-const User = require('../models/userModel');  // Ensure the path is correct
-const bcrypt = require('bcrypt');
+const User = require('../models/userModel');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 // Register a new user
 const registerUser = async (req, res) => {
@@ -11,15 +12,21 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ message: 'Username, email, and password are required' });
         }
 
-        // Check if the email already exists
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
+        // Check if username already exists
+        const existingUsername = await User.findOne({ username });
+        if (existingUsername) {
+            return res.status(409).json({ message: 'Username already in use' });
+        }
+
+        // Check if email already exists
+        const existingEmail = await User.findOne({ email });
+        if (existingEmail) {
             return res.status(409).json({ message: 'Email already in use' });
         }
 
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
-        
+
         // Create a new user
         const newUser = new User({ username, email, password: hashedPassword });
         await newUser.save();
@@ -31,7 +38,7 @@ const registerUser = async (req, res) => {
     }
 };
 
-// Login user and return user ID
+// Login user and return JWT token
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -52,7 +59,14 @@ const loginUser = async (req, res) => {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        res.status(200).json({ message: 'Login successful', userId: user._id });
+        // Generate JWT token
+        const token = jwt.sign(
+            { userId: user._id },
+            process.env.JWT_SECRET || 'fallback_secret',
+            { expiresIn: '1h' }
+        );
+
+        res.status(200).json({ message: 'Login successful', userId: user._id, token });
     } catch (error) {
         console.error('Error logging in:', error);
         res.status(500).json({ message: 'Error logging in', error: error.message });

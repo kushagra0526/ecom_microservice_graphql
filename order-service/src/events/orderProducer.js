@@ -5,9 +5,9 @@ const producer = new kafka.Producer(kafkaClient);
 
 const produceOrderEvent = (order) => {
   const payloads = [
-    { topic: 'order_created', messages: JSON.stringify(order) },
+    { topic: 'order-events', messages: JSON.stringify(order) },
   ];
-  
+
   producer.send(payloads, (error, result) => {
     if (error) {
       console.error('Failed to produce order event:', error);

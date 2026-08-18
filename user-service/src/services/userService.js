@@ -12,12 +12,16 @@ exports.registerNewUser = async ({ username, email, password }) => {
 };
 
 // Authenticate a user and generate a JWT
-exports.authenticateUser = async ({ username, password }) => {
-  const user = await User.findOne({ username });
+exports.authenticateUser = async ({ email, password }) => {
+  const user = await User.findOne({ email });
   if (!user || !(await bcrypt.compare(password, user.password))) {
     throw new Error('Invalid credentials');
   }
   // Generate JWT token
-  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  const token = jwt.sign(
+    { userId: user._id },
+    process.env.JWT_SECRET || 'fallback_secret',
+    { expiresIn: '1h' }
+  );
   return token;
 };
