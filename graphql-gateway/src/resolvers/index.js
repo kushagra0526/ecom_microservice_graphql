@@ -35,15 +35,35 @@ const resolvers = {
     // createUser maps to the user-service register endpoint
     createUser: async (_, { username, email, password }) => {
       const response = await axios.post(`${USER_SERVICE_URL}/users/register`, { username, email, password });
-      return response.data;
+      // user-service returns { message, userId } — map it to GraphQL User type
+      return {
+        id: response.data.userId,
+        username,
+        email,
+      };
     },
     createProduct: async (_, { name, description, price }) => {
       const response = await axios.post(`${PRODUCT_SERVICE_URL}/products`, { name, description, price });
-      return response.data;
+      // product-service returns { message, product } — map it to GraphQL Product type
+      const p = response.data.product;
+      return {
+        id: p._id,
+        name: p.name,
+        description: p.description,
+        price: p.price,
+      };
     },
     createOrder: async (_, { productId, userId, quantity }) => {
       const response = await axios.post(`${ORDER_SERVICE_URL}/orders`, { productId, userId, quantity });
-      return response.data;
+      // order-service returns the order object directly
+      const o = response.data;
+      return {
+        id: o._id,
+        productId: o.productId,
+        userId: o.userId,
+        quantity: o.quantity,
+        status: o.status,
+      };
     },
   },
 };
