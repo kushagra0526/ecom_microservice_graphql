@@ -1,6 +1,8 @@
 const kafka = require('kafka-node');
 
-const kafkaClient = new kafka.KafkaClient({ kafkaHost: process.env.KAFKA_BROKER });
+const kafkaClient = new kafka.KafkaClient({ kafkaHost: process.env.KAFKA_BROKER || 'kafka:29092' });
+kafkaClient.on('error', (err) => console.error('Kafka client error:', err));
+
 const consumer = new kafka.Consumer(
   kafkaClient,
   [{ topic: 'order-events', partition: 0 }],
@@ -9,7 +11,6 @@ const consumer = new kafka.Consumer(
 
 consumer.on('message', (message) => {
   console.log('Order event received:', message.value);
-  // Handle the order event here (e.g., update databases, send notifications, etc.)
 });
 
 consumer.on('error', (err) => {

@@ -1,8 +1,4 @@
 const Product = require('../models/productModel');
-const { KafkaClient, Producer } = require('kafka-node');
-
-const client = new KafkaClient({ kafkaHost: process.env.KAFKA_BROKER || 'kafka:29092' });
-const producer = new Producer(client);
 
 // Create a new product
 exports.createProduct = async (productData) => {
