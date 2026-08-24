@@ -23,6 +23,9 @@ mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
 // Use product routes
 app.use('/products', productRoutes);
 
+// Start Kafka consumer
+require('./events/productConsumer');
+
 // Start the server
 const port = process.env.PORT || 3002; // Change the port as needed
 const server = app.listen(port, () => {

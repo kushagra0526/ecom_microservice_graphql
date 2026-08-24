@@ -1,6 +1,7 @@
 const User = require('../models/userModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { emitUserRegisteredEvent } = require('../events/userProducer');
 
 // Register a new user
 const registerUser = async (req, res) => {
@@ -30,6 +31,9 @@ const registerUser = async (req, res) => {
         // Create a new user
         const newUser = new User({ username, email, password: hashedPassword });
         await newUser.save();
+
+        // Emit Kafka event for user registration
+        emitUserRegisteredEvent({ id: newUser._id, username, email });
 
         res.status(201).json({ message: 'User registered successfully', userId: newUser._id });
     } catch (error) {

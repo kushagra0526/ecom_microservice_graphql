@@ -25,6 +25,9 @@ mongoose.connect(mongoURI, {
 // Routes (prefix the routes with '/users')
 app.use('/users', userRoutes);
 
+// Start Kafka consumer
+require('./events/userConsumer');
+
 // Start server on the specified port
 const PORT = process.env.PORT || 3001;
 const server = app.listen(PORT, () => {
