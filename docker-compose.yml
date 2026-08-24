@@ -12,7 +12,7 @@ services:
       - ecom-network
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:7.4.0
     container_name: zookeeper
     ports:
       - "2181:2181"
@@ -23,7 +23,7 @@ services:
       - ecom-network
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.4.0
     container_name: kafka
     ports:
       - "9092:9092"
