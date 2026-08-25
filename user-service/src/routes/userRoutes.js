@@ -1,18 +1,12 @@
 const express = require('express');
 const { registerUser, loginUser, getUsers, getUserById } = require('../controllers/userController');
+const auth = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// Route for user registration
-router.post('/register', registerUser);
-
-// Route for user login
-router.post('/login', loginUser);
-
-// Route to get all users
-router.get('/', getUsers);
-
-// Route to get a user by ID
-router.get('/:id', getUserById);
+router.post('/register', registerUser);   // public
+router.post('/login', loginUser);         // public
+router.get('/', auth, getUsers);          // protected — user list is sensitive
+router.get('/:id', auth, getUserById);    // protected — user-specific data
 
 module.exports = router;

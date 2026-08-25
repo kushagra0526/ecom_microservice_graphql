@@ -1,15 +1,11 @@
 const express = require('express');
 const { createProduct, getProducts, getProductById } = require('../controllers/productController');
+const auth = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// Route to create a new product
-router.post('/', createProduct);
-
-// Route to get all products
-router.get('/', getProducts);
-
-// Route to get a product by ID
-router.get('/:id', getProductById);
+router.post('/', auth, createProduct);    // protected — mutates data
+router.get('/', getProducts);             // public — product listing
+router.get('/:id', getProductById);       // public — product detail
 
 module.exports = router;
