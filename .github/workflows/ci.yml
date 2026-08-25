@@ -30,6 +30,7 @@ jobs:
         env:
           JWT_SECRET: test-secret
           MONGO_URI: mongodb://localhost:27017/test-user
+          NODE_ENV: test
 
   test-product-service:
     name: product-service tests
@@ -54,6 +55,7 @@ jobs:
         env:
           JWT_SECRET: test-secret
           MONGO_URI: mongodb://localhost:27017/test-product
+          NODE_ENV: test
 
   test-order-service:
     name: order-service tests
@@ -78,6 +80,7 @@ jobs:
         env:
           JWT_SECRET: test-secret
           MONGO_URI: mongodb://localhost:27017/test-order
+          NODE_ENV: test
 
   test-graphql-gateway:
     name: graphql-gateway tests
@@ -96,3 +99,4 @@ jobs:
       - run: npm test -- --forceExit --ci
         env:
           JWT_SECRET: test-secret
+          NODE_ENV: test

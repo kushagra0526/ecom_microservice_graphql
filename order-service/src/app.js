@@ -50,7 +50,7 @@ require('./events/orderConsumer');
 app.use((req, res) => res.status(404).json({ error: 'Route not found', status: 404 }));
 app.use(require('./middleware/errorHandler'));
 
-const port = process.env.PORT || 3003;
+const port = process.env.NODE_ENV === 'test' ? 0 : (process.env.PORT || 3003);
 const server = app.listen(port, () => {
   logger.info(`Order service running on port ${port}`);
 });

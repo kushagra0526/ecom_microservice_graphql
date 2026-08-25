@@ -49,7 +49,7 @@ require('./events/userConsumer');
 app.use((req, res) => res.status(404).json({ error: 'Route not found', status: 404 }));
 app.use(require('./middleware/errorHandler'));
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.NODE_ENV === 'test' ? 0 : (process.env.PORT || 3001);
 const server = app.listen(PORT, () => {
   logger.info(`User service running on port ${PORT}`);
 });

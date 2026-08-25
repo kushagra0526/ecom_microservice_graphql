@@ -1,11 +1,13 @@
 const createKafkaClient = require('./kafkaConfig');
 const logger = require('../logger');
 
-const kafka = createKafkaClient();
-const consumer = kafka.consumer({ groupId: 'order-service-group' });
+let consumer = null;
 
 const runConsumer = async () => {
   try {
+    const kafka = createKafkaClient();
+    consumer = kafka.consumer({ groupId: 'order-service-group' });
+
     await consumer.connect();
     await consumer.subscribe({ topic: 'order-events', fromBeginning: false });
 
@@ -28,11 +30,15 @@ const runConsumer = async () => {
   }
 };
 
-// Start consumer
-runConsumer();
+// Only start the consumer when not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  runConsumer();
+}
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
-  await consumer.disconnect();
-  logger.info('Kafka consumer disconnected');
+  if (consumer) {
+    await consumer.disconnect();
+    logger.info('Kafka consumer disconnected');
+  }
 });
