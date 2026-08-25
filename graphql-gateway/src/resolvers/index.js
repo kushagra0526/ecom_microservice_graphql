@@ -66,6 +66,14 @@ const resolvers = {
       const response = await axios.post(`${PRODUCT_SERVICE_URL}/products`, { name, description, price });
       return mapProduct(response.data.product);
     },
+    updateProduct: async (_, { id, ...fields }) => {
+      const response = await axios.put(`${PRODUCT_SERVICE_URL}/products/${id}`, fields);
+      return mapProduct(response.data.product);
+    },
+    deleteProduct: async (_, { id }) => {
+      await axios.delete(`${PRODUCT_SERVICE_URL}/products/${id}`);
+      return 'Product deleted successfully';
+    },
     createOrder: async (_, { productId, userId, quantity }) => {
       const response = await axios.post(`${ORDER_SERVICE_URL}/orders`, { productId, userId, quantity });
       return mapOrder(response.data);
