@@ -22,6 +22,13 @@ mongoose.connect(mongoURI, {
     process.exit(1);  // Exit process with failure if DB connection fails
   });
 
+// Health check — public, no auth
+app.get('/health', (req, res) => {
+  const db = mongoose.connection.readyState === 1;
+  const status = db ? 200 : 503;
+  res.status(status).json({ status: db ? 'ok' : 'degraded', service: 'user-service', timestamp: new Date().toISOString() });
+});
+
 // Routes (prefix the routes with '/users')
 app.use('/users', userRoutes);
 

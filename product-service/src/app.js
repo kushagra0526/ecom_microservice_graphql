@@ -20,6 +20,13 @@ mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('Connected to MongoDB'))
     .catch(err => console.error('Error connecting to MongoDB:', err));
 
+// Health check — public, no auth
+app.get('/health', (req, res) => {
+    const db = mongoose.connection.readyState === 1;
+    const status = db ? 200 : 503;
+    res.status(status).json({ status: db ? 'ok' : 'degraded', service: 'product-service', timestamp: new Date().toISOString() });
+});
+
 // Use product routes
 app.use('/products', productRoutes);
 
