@@ -28,6 +28,12 @@ app.use('/users', userRoutes);
 // Start Kafka consumer
 require('./events/userConsumer');
 
+// 404 for unmatched routes
+app.use((req, res) => res.status(404).json({ error: 'Route not found', status: 404 }));
+
+// Centralized error handler
+app.use(require('./middleware/errorHandler'));
+
 // Start server on the specified port
 const PORT = process.env.PORT || 3001;
 const server = app.listen(PORT, () => {

@@ -3,67 +3,48 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { emitUserRegisteredEvent } = require('../events/userProducer');
 
-// Register a new user
-const registerUser = async (req, res) => {
+const registerUser = async (req, res, next) => {
     try {
         const { username, email, password } = req.body;
 
-        // Check if the required fields are provided
-        if (!username || !email || !password) {
+        if (!username || !email || !password)
             return res.status(400).json({ message: 'Username, email, and password are required' });
-        }
 
-        // Check if username already exists
         const existingUsername = await User.findOne({ username });
-        if (existingUsername) {
+        if (existingUsername)
             return res.status(409).json({ message: 'Username already in use' });
-        }
 
-        // Check if email already exists
         const existingEmail = await User.findOne({ email });
-        if (existingEmail) {
+        if (existingEmail)
             return res.status(409).json({ message: 'Email already in use' });
-        }
 
-        // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Create a new user
         const newUser = new User({ username, email, password: hashedPassword });
         await newUser.save();
 
-        // Emit Kafka event for user registration
         emitUserRegisteredEvent({ id: newUser._id, username, email });
 
         res.status(201).json({ message: 'User registered successfully', userId: newUser._id });
     } catch (error) {
-        console.error('Error registering user:', error);
-        res.status(500).json({ message: 'Error registering user', error: error.message });
+        next(error);
     }
 };
 
-// Login user and return JWT token
-const loginUser = async (req, res) => {
+const loginUser = async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
-        // Check if the email and password are provided
-        if (!email || !password) {
+        if (!email || !password)
             return res.status(400).json({ message: 'Email and password are required' });
-        }
 
         const user = await User.findOne({ email });
-        if (!user) {
+        if (!user)
             return res.status(404).json({ message: 'User not found' });
-        }
 
-        // Verify the password
         const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
+        if (!isPasswordValid)
             return res.status(401).json({ message: 'Invalid credentials' });
-        }
 
-        // Generate JWT token
         const token = jwt.sign(
             { userId: user._id },
             process.env.JWT_SECRET || 'fallback_secret',
@@ -72,39 +53,28 @@ const loginUser = async (req, res) => {
 
         res.status(200).json({ message: 'Login successful', userId: user._id, token });
     } catch (error) {
-        console.error('Error logging in:', error);
-        res.status(500).json({ message: 'Error logging in', error: error.message });
+        next(error);
     }
 };
 
-// Get all users
-const getUsers = async (req, res) => {
+const getUsers = async (req, res, next) => {
     try {
-        const users = await User.find({}, { password: 0 }); // exclude password
+        const users = await User.find({}, { password: 0 });
         res.status(200).json(users);
     } catch (error) {
-        console.error('Error fetching users:', error);
-        res.status(500).json({ message: 'Error fetching users', error: error.message });
+        next(error);
     }
 };
 
-// Get user by ID
-const getUserById = async (req, res) => {
+const getUserById = async (req, res, next) => {
     try {
-        const user = await User.findById(req.params.id, { password: 0 }); // exclude password
-        if (!user) {
+        const user = await User.findById(req.params.id, { password: 0 });
+        if (!user)
             return res.status(404).json({ message: 'User not found' });
-        }
         res.status(200).json(user);
     } catch (error) {
-        console.error('Error fetching user:', error);
-        res.status(500).json({ message: 'Error fetching user', error: error.message });
+        next(error);
     }
 };
 
-module.exports = {
-    registerUser,
-    loginUser,
-    getUsers,
-    getUserById
-};
+module.exports = { registerUser, loginUser, getUsers, getUserById };
