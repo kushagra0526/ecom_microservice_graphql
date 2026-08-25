@@ -2,6 +2,9 @@ const request = require('supertest');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 
+// Mock Kafka consumer to prevent it from starting during tests
+jest.mock('../src/events/orderConsumer', () => ({}));
+
 // Mock axios BEFORE requiring the app so the cross-service validation calls don't hit real services
 jest.mock('axios');
 const axios = require('axios');

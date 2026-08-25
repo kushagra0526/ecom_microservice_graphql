@@ -1,6 +1,10 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+
+// Mock Kafka consumer to prevent it from starting during tests
+jest.mock('../src/events/userConsumer', () => ({}));
+
 const server = require('../src/app');
 const User = require('../src/models/userModel');
 

@@ -1,6 +1,10 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
+
+// Mock Kafka consumer to prevent it from starting during tests
+jest.mock('../src/events/productConsumer', () => ({}));
+
 const server = require('../src/app');
 
 // Generate a valid token for protected routes
@@ -35,7 +39,9 @@ describe('Product Service', () => {
   });
 
   it('should get all products', async () => {
-    const response = await request(server).get('/products');
+    const response = await request(server)
+      .get('/products')
+      .set('Authorization', `Bearer ${token}`);
     expect(response.status).toBe(200);
     // Response is paginated: { data, total, limit, offset }
     expect(response.body).toHaveProperty('data');
@@ -49,7 +55,9 @@ describe('Product Service', () => {
       price: 49.99,
     });
 
-    const response = await request(server).get(`/products/${product._id}`);
+    const response = await request(server)
+      .get(`/products/${product._id}`)
+      .set('Authorization', `Bearer ${token}`);
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('name', 'Another Product');
   });
