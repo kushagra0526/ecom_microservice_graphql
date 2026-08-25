@@ -10,15 +10,20 @@ exports.createOrder = async (req, res, next) => {
   try {
     const { productId, userId, quantity } = req.body;
 
-    // Validate product and user exist — inner try/catch stays: these are intentional 400/503, not unhandled errors
+    // Validate product and user exist — forward auth token so protected routes don't reject
+    const authHeader = req.headers.authorization
+      ? { headers: { Authorization: req.headers.authorization } }
+      : {};
     try {
       await Promise.all([
-        axios.get(`${USER_SERVICE_URL}/users/${userId}`, { timeout: TIMEOUT }),
-        axios.get(`${PRODUCT_SERVICE_URL}/products/${productId}`, { timeout: TIMEOUT }),
+        axios.get(`${USER_SERVICE_URL}/users/${userId}`, { timeout: TIMEOUT, ...authHeader }),
+        axios.get(`${PRODUCT_SERVICE_URL}/products/${productId}`, { timeout: TIMEOUT, ...authHeader }),
       ]);
     } catch (err) {
       if (!err.response)
         return res.status(503).json({ message: 'A required service is unreachable. Please try again later.' });
+      if (err.response.status === 401)
+        return res.status(401).json({ message: 'Unauthorized. Please provide a valid token.' });
       const target = err.config.url.includes('users') ? 'User' : 'Product';
       return res.status(400).json({ message: `${target} with id '${err.config.url.split('/').pop()}' does not exist.` });
     }
