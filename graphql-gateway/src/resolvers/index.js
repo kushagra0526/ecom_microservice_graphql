@@ -36,17 +36,27 @@ const resolvers = {
       const response = await axios.get(`${USER_SERVICE_URL}/users/${id}`);
       return mapUser(response.data);
     },
-    getProducts: async () => {
-      const response = await axios.get(`${PRODUCT_SERVICE_URL}/products`);
-      return response.data.map(mapProduct);
+    getProducts: async (_, { limit = 20, offset = 0 }) => {
+      const response = await axios.get(`${PRODUCT_SERVICE_URL}/products`, { params: { limit, offset } });
+      return {
+        data: response.data.data.map(mapProduct),
+        total: response.data.total,
+        limit: response.data.limit,
+        offset: response.data.offset,
+      };
     },
     getProduct: async (_, { id }) => {
       const response = await axios.get(`${PRODUCT_SERVICE_URL}/products/${id}`);
       return mapProduct(response.data);
     },
-    getOrders: async () => {
-      const response = await axios.get(`${ORDER_SERVICE_URL}/orders`);
-      return response.data.map(mapOrder);
+    getOrders: async (_, { limit = 20, offset = 0 }) => {
+      const response = await axios.get(`${ORDER_SERVICE_URL}/orders`, { params: { limit, offset } });
+      return {
+        data: response.data.data.map(mapOrder),
+        total: response.data.total,
+        limit: response.data.limit,
+        offset: response.data.offset,
+      };
     },
     getOrder: async (_, { id }) => {
       const response = await axios.get(`${ORDER_SERVICE_URL}/orders/${id}`);

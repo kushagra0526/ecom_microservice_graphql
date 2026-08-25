@@ -13,8 +13,13 @@ exports.createProduct = async (req, res, next) => {
 
 exports.getProducts = async (req, res, next) => {
   try {
-    const products = await Product.find();
-    res.status(200).json(products);
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    const offset = parseInt(req.query.offset) || 0;
+    const [data, total] = await Promise.all([
+      Product.find().skip(offset).limit(limit),
+      Product.countDocuments(),
+    ]);
+    res.status(200).json({ data, total, limit, offset });
   } catch (err) {
     next(err);
   }

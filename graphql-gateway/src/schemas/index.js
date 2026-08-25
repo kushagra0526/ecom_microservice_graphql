@@ -22,12 +22,26 @@ const typeDefs = gql`
     status: String!
   }
 
+  type ProductList {
+    data: [Product]
+    total: Int!
+    limit: Int!
+    offset: Int!
+  }
+
+  type OrderList {
+    data: [Order]
+    total: Int!
+    limit: Int!
+    offset: Int!
+  }
+
   type Query {
     getUsers: [User]
     getUser(id: ID!): User
-    getProducts: [Product]
+    getProducts(limit: Int, offset: Int): ProductList
     getProduct(id: ID!): Product
-    getOrders: [Order]
+    getOrders(limit: Int, offset: Int): OrderList
     getOrder(id: ID!): Order
   }
 

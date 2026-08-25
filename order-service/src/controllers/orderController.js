@@ -34,8 +34,13 @@ exports.createOrder = async (req, res, next) => {
 
 exports.getAllOrders = async (req, res, next) => {
   try {
-    const orders = await Order.find();
-    res.status(200).json(orders);
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    const offset = parseInt(req.query.offset) || 0;
+    const [data, total] = await Promise.all([
+      Order.find().skip(offset).limit(limit),
+      Order.countDocuments(),
+    ]);
+    res.status(200).json({ data, total, limit, offset });
   } catch (error) {
     next(error);
   }
