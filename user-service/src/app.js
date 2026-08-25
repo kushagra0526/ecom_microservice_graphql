@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const pinoHttp = require('pino-http');
 const rateLimit = require('express-rate-limit');
+const swaggerUi = require('swagger-ui-express');
 const userRoutes = require('./routes/userRoutes');
 const logger = require('./logger');
 require('dotenv').config();
@@ -22,6 +23,9 @@ mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
     logger.error({ err }, 'Could not connect to MongoDB');
     process.exit(1);
   });
+
+// API docs — public, no auth, no rate limit (registered before limiter)
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(require('./swagger')));
 
 // Health check — exempt from rate limiting (registered before limiters)
 app.get('/health', (req, res) => {
