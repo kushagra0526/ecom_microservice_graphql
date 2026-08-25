@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const pinoHttp = require('pino-http');
+const rateLimit = require('express-rate-limit');
 const userRoutes = require('./routes/userRoutes');
 const logger = require('./logger');
 require('dotenv').config();
@@ -8,7 +9,6 @@ require('dotenv').config();
 const app = express();
 app.use(express.json());
 
-// Request logger — redacts sensitive fields from logs
 app.use(pinoHttp({
   logger,
   redact: ['req.headers.authorization', 'req.body.password', 'req.body.token'],
@@ -23,12 +23,21 @@ mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
     process.exit(1);
   });
 
-// Health check — public, no auth
+// Health check — exempt from rate limiting (registered before limiters)
 app.get('/health', (req, res) => {
   const db = mongoose.connection.readyState === 1;
   const status = db ? 200 : 503;
   res.status(status).json({ status: db ? 'ok' : 'degraded', service: 'user-service', timestamp: new Date().toISOString() });
 });
+
+// Global limiter — 100 req / 15 min per IP
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.', status: 429 },
+}));
 
 app.use('/users', userRoutes);
 require('./events/userConsumer');
