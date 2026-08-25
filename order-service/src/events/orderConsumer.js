@@ -1,17 +1,38 @@
-const kafka = require('kafka-node');
+const createKafkaClient = require('./kafkaConfig');
 const logger = require('../logger');
 
-const kafkaClient = new kafka.KafkaClient({ kafkaHost: process.env.KAFKA_BROKER || 'kafka:29092' });
-kafkaClient.on('error', (err) => logger.error({ err }, 'Kafka client error'));
+const kafka = createKafkaClient();
+const consumer = kafka.consumer({ groupId: 'order-service-group' });
 
-const consumer = new kafka.Consumer(
-  kafkaClient,
-  [{ topic: 'order-events', partition: 0 }],
-  { autoCommit: true }
-);
+const runConsumer = async () => {
+  try {
+    await consumer.connect();
+    await consumer.subscribe({ topic: 'order-events', fromBeginning: false });
 
-consumer.on('message', (message) => {
-  logger.info({ value: message.value }, 'Order event received');
+    await consumer.run({
+      eachMessage: async ({ topic, partition, message }) => {
+        try {
+          const order = JSON.parse(message.value.toString());
+          logger.info({ order }, 'Order event received');
+
+          // Additional logic here (e.g., update inventory, notify warehouse)
+        } catch (err) {
+          logger.error({ err }, 'Error processing order event');
+        }
+      },
+    });
+
+    logger.info('Order service Kafka consumer started');
+  } catch (err) {
+    logger.error({ err }, 'Error in Kafka consumer');
+  }
+};
+
+// Start consumer
+runConsumer();
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  await consumer.disconnect();
+  logger.info('Kafka consumer disconnected');
 });
-
-consumer.on('error', (err) => logger.error({ err }, 'Error in Kafka consumer'));

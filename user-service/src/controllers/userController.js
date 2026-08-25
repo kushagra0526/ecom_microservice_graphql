@@ -22,7 +22,10 @@ const registerUser = async (req, res, next) => {
         const newUser = new User({ username, email, password: hashedPassword });
         await newUser.save();
 
-        emitUserRegisteredEvent({ id: newUser._id, username, email });
+        // Emit Kafka event (non-blocking)
+        emitUserRegisteredEvent({ id: newUser._id, username, email }).catch(err =>
+            console.error('Failed to emit user event:', err)
+        );
 
         res.status(201).json({ message: 'User registered successfully', userId: newUser._id });
     } catch (error) {

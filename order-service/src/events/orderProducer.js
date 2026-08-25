@@ -1,29 +1,44 @@
-const kafka = require('kafka-node');
+const createKafkaClient = require('./kafkaConfig');
 const logger = require('../logger');
 
 let producer = null;
 
-const getProducer = () => {
+const getProducer = async () => {
   if (!producer) {
-    const client = new kafka.KafkaClient({ kafkaHost: process.env.KAFKA_BROKER || 'kafka:29092' });
-    producer = new kafka.Producer(client);
-    client.on('error', (err) => logger.error({ err }, 'Kafka client error'));
-    producer.on('error', (err) => logger.error({ err }, 'Kafka producer error'));
+    const kafka = createKafkaClient();
+    producer = kafka.producer();
+
+    await producer.connect();
+    logger.info('Kafka producer connected');
+
+    producer.on('producer.disconnect', () => {
+      logger.warn('Kafka producer disconnected');
+    });
   }
   return producer;
 };
 
-const produceOrderEvent = (order) => {
+const produceOrderEvent = async (order) => {
   try {
-    const p = getProducer();
-    const payloads = [{ topic: 'order-events', messages: JSON.stringify(order) }];
-    p.send(payloads, (error, result) => {
-      if (error) logger.error({ error }, 'Failed to produce order event');
-      else logger.info({ result }, 'Order event produced');
+    const p = await getProducer();
+
+    await p.send({
+      topic: 'order-events',
+      messages: [{ value: JSON.stringify(order) }],
     });
+
+    logger.info({ orderId: order._id }, 'Order event produced');
   } catch (err) {
-    logger.error({ err }, 'Kafka not available, skipping event');
+    logger.error({ err }, 'Failed to produce order event');
   }
 };
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  if (producer) {
+    await producer.disconnect();
+    logger.info('Kafka producer disconnected');
+  }
+});
 
 module.exports = { produceOrderEvent };

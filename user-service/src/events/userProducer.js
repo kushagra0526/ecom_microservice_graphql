@@ -1,28 +1,43 @@
-const kafka = require('kafka-node');
+const createKafkaClient = require('./kafkaConfig');
 const logger = require('../logger');
 
 let producer = null;
 
-const getProducer = () => {
+const getProducer = async () => {
   if (!producer) {
-    const client = new kafka.KafkaClient({ kafkaHost: process.env.KAFKA_BROKER || 'kafka:29092' });
-    producer = new kafka.Producer(client);
-    client.on('error', (err) => logger.error({ err }, 'Kafka client error'));
-    producer.on('error', (err) => logger.error({ err }, 'Kafka producer error'));
+    const kafka = createKafkaClient();
+    producer = kafka.producer();
+
+    await producer.connect();
+    logger.info('Kafka producer connected');
+
+    producer.on('producer.disconnect', () => {
+      logger.warn('Kafka producer disconnected');
+    });
   }
   return producer;
 };
 
-exports.emitUserRegisteredEvent = (user) => {
+exports.emitUserRegisteredEvent = async (user) => {
   try {
-    const p = getProducer();
+    const p = await getProducer();
     const event = { type: 'UserRegistered', data: user };
-    const payloads = [{ topic: 'user-events', messages: JSON.stringify(event) }];
-    p.send(payloads, (err, data) => {
-      if (err) logger.error({ err }, 'Failed to emit UserRegistered event');
-      else logger.info({ data }, 'UserRegistered event emitted');
+
+    await p.send({
+      topic: 'user-events',
+      messages: [{ value: JSON.stringify(event) }],
     });
+
+    logger.info({ userId: user.id }, 'UserRegistered event emitted');
   } catch (err) {
-    logger.error({ err }, 'Kafka not available, skipping event');
+    logger.error({ err }, 'Failed to emit UserRegistered event');
   }
 };
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  if (producer) {
+    await producer.disconnect();
+    logger.info('Kafka producer disconnected');
+  }
+});

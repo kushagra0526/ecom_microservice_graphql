@@ -4,7 +4,12 @@ const { emitProductCreatedEvent } = require('../events/productProducer');
 exports.createProduct = async (req, res, next) => {
   try {
     const product = await Product.create(req.body);
-    emitProductCreatedEvent(product);
+
+    // Emit Kafka event (non-blocking)
+    emitProductCreatedEvent(product).catch(err =>
+      console.error('Failed to emit product event:', err)
+    );
+
     res.status(201).json({ message: 'Product created successfully', product });
   } catch (err) {
     next(err);

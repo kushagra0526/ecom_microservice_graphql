@@ -30,7 +30,12 @@ exports.createOrder = async (req, res, next) => {
 
     const newOrder = new Order({ productId, userId, quantity });
     await newOrder.save();
-    produceOrderEvent(newOrder);
+
+    // Emit Kafka event (non-blocking)
+    produceOrderEvent(newOrder).catch(err =>
+      console.error('Failed to emit order event:', err)
+    );
+
     res.status(201).json(newOrder);
   } catch (error) {
     next(error);
