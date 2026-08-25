@@ -1,25 +1,26 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const pinoHttp = require('pino-http');
 const userRoutes = require('./routes/userRoutes');
-require('dotenv').config();  // Load environment variables from .env file
+const logger = require('./logger');
+require('dotenv').config();
 
 const app = express();
-
-// Middleware to parse JSON requests
 app.use(express.json());
 
-// MongoDB connection string — supports both MONGO_URI and MONGODB_URI for flexibility
+// Request logger — redacts sensitive fields from logs
+app.use(pinoHttp({
+  logger,
+  redact: ['req.headers.authorization', 'req.body.password', 'req.body.token'],
+}));
+
 const mongoURI = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/userdb';
 
-// Connect to MongoDB
-mongoose.connect(mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => console.log('Connected to MongoDB'))
+mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => logger.info('Connected to MongoDB'))
   .catch((err) => {
-    console.error('Could not connect to MongoDB:', err);
-    process.exit(1);  // Exit process with failure if DB connection fails
+    logger.error({ err }, 'Could not connect to MongoDB');
+    process.exit(1);
   });
 
 // Health check — public, no auth
@@ -29,32 +30,24 @@ app.get('/health', (req, res) => {
   res.status(status).json({ status: db ? 'ok' : 'degraded', service: 'user-service', timestamp: new Date().toISOString() });
 });
 
-// Routes (prefix the routes with '/users')
 app.use('/users', userRoutes);
-
-// Start Kafka consumer
 require('./events/userConsumer');
 
-// 404 for unmatched routes
 app.use((req, res) => res.status(404).json({ error: 'Route not found', status: 404 }));
-
-// Centralized error handler
 app.use(require('./middleware/errorHandler'));
 
-// Start server on the specified port
 const PORT = process.env.PORT || 3001;
 const server = app.listen(PORT, () => {
-  console.log(`User service running on port ${PORT}`);
+  logger.info(`User service running on port ${PORT}`);
 });
 
-// Graceful shutdown on process termination
 process.on('SIGINT', async () => {
-  console.log('Received SIGINT. Closing the server...');
-  await mongoose.connection.close();  // Close the MongoDB connection gracefully
+  logger.info('Received SIGINT. Closing the server...');
+  await mongoose.connection.close();
   server.close(() => {
-    console.log('Server closed.');
+    logger.info('Server closed.');
     process.exit(0);
   });
 });
 
-module.exports = server; // Export server instance for testing
+module.exports = server;

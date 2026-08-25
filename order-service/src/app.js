@@ -1,22 +1,27 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const pinoHttp = require('pino-http');
 const orderRoutes = require('./routes/orderRoutes');
+const logger = require('./logger');
 require('dotenv').config();
 
 const app = express();
-app.use(express.json()); // Middleware to parse JSON requests
+app.use(express.json());
 
-// MongoDB connection
+app.use(pinoHttp({
+  logger,
+  redact: ['req.headers.authorization', 'req.body.password', 'req.body.token'],
+}));
+
 const mongoURI = process.env.MONGO_URI;
-
 if (!mongoURI) {
-  console.error('Error: MONGO_URI is not defined. Please check your .env file.');
+  logger.error('MONGO_URI is not defined. Please check your .env file.');
   process.exit(1);
 }
 
 mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('Error connecting to MongoDB:', err));
+  .then(() => logger.info('Connected to MongoDB'))
+  .catch(err => logger.error({ err }, 'Error connecting to MongoDB'));
 
 // Health check — public, no auth
 app.get('/health', (req, res) => {
@@ -25,32 +30,24 @@ app.get('/health', (req, res) => {
   res.status(status).json({ status: db ? 'ok' : 'degraded', service: 'order-service', timestamp: new Date().toISOString() });
 });
 
-// Order routes
 app.use('/orders', orderRoutes);
-
-// Start Kafka consumer
 require('./events/orderConsumer');
 
-// 404 for unmatched routes
 app.use((req, res) => res.status(404).json({ error: 'Route not found', status: 404 }));
-
-// Centralized error handler
 app.use(require('./middleware/errorHandler'));
 
-// Start the server
 const port = process.env.PORT || 3003;
 const server = app.listen(port, () => {
-  console.log(`Order service running on port ${port}`);
+  logger.info(`Order service running on port ${port}`);
 });
 
-// Graceful shutdown on process termination
 process.on('SIGINT', async () => {
-  console.log('Received SIGINT. Closing the server...');
+  logger.info('Received SIGINT. Closing the server...');
   await mongoose.connection.close();
   server.close(() => {
-    console.log('Server closed.');
+    logger.info('Server closed.');
     process.exit(0);
   });
 });
 
-module.exports = server; // Export the server instance
+module.exports = server;

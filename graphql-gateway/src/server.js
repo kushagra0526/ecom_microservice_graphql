@@ -1,9 +1,9 @@
 const { ApolloServer } = require('apollo-server');
 const typeDefs = require('./schemas');
 const resolvers = require('./resolvers');
+const logger = require('./logger');
 require('dotenv').config();
 
-// Set up Apollo Server
 const server = new ApolloServer({
   typeDefs,
   resolvers,
@@ -12,9 +12,8 @@ const server = new ApolloServer({
   },
 });
 
-// Start the server
 const port = process.env.PORT || 4000;
 
 server.listen({ port }).then(({ url }) => {
-  console.log(`🚀 GraphQL API Gateway ready at ${url}`);
+  logger.info(`GraphQL API Gateway ready at ${url}`);
 });

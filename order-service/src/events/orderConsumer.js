@@ -1,7 +1,8 @@
 const kafka = require('kafka-node');
+const logger = require('../logger');
 
 const kafkaClient = new kafka.KafkaClient({ kafkaHost: process.env.KAFKA_BROKER || 'kafka:29092' });
-kafkaClient.on('error', (err) => console.error('Kafka client error:', err));
+kafkaClient.on('error', (err) => logger.error({ err }, 'Kafka client error'));
 
 const consumer = new kafka.Consumer(
   kafkaClient,
@@ -10,9 +11,7 @@ const consumer = new kafka.Consumer(
 );
 
 consumer.on('message', (message) => {
-  console.log('Order event received:', message.value);
+  logger.info({ value: message.value }, 'Order event received');
 });
 
-consumer.on('error', (err) => {
-  console.error('Error in Kafka consumer:', err);
-});
+consumer.on('error', (err) => logger.error({ err }, 'Error in Kafka consumer'));

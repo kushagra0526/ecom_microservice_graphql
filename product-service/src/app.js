@@ -1,24 +1,27 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const pinoHttp = require('pino-http');
 const productRoutes = require('./routes/productRoutes');
-require('dotenv').config(); // Load environment variables
+const logger = require('./logger');
+require('dotenv').config();
 
 const app = express();
-app.use(express.json()); // Middleware to parse JSON requests
+app.use(express.json());
 
-// MongoDB connection
-const mongoURI = process.env.MONGO_URI; // Get MongoDB URI from environment variables
+app.use(pinoHttp({
+    logger,
+    redact: ['req.headers.authorization', 'req.body.password', 'req.body.token'],
+}));
 
-// Check if the URI is defined
+const mongoURI = process.env.MONGO_URI;
 if (!mongoURI) {
-    console.error('Error: MONGO_URI is not defined. Please check your .env file.');
-    process.exit(1); // Exit the application if MONGO_URI is not set
+    logger.error('MONGO_URI is not defined. Please check your .env file.');
+    process.exit(1);
 }
 
-// Connect to MongoDB
 mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('Error connecting to MongoDB:', err));
+    .then(() => logger.info('Connected to MongoDB'))
+    .catch(err => logger.error({ err }, 'Error connecting to MongoDB'));
 
 // Health check — public, no auth
 app.get('/health', (req, res) => {
@@ -27,30 +30,21 @@ app.get('/health', (req, res) => {
     res.status(status).json({ status: db ? 'ok' : 'degraded', service: 'product-service', timestamp: new Date().toISOString() });
 });
 
-// Use product routes
 app.use('/products', productRoutes);
-
-// Start Kafka consumer
 require('./events/productConsumer');
 
-// 404 for unmatched routes
 app.use((req, res) => res.status(404).json({ error: 'Route not found', status: 404 }));
-
-// Centralized error handler
 app.use(require('./middleware/errorHandler'));
 
-// Start the server
-const port = process.env.PORT || 3002; // Change the port as needed
+const port = process.env.PORT || 3002;
 const server = app.listen(port, () => {
-    console.log(`Product service running on port ${port}`);
+    logger.info(`Product service running on port ${port}`);
 });
 
-// Graceful shutdown on process termination
 process.on('SIGINT', async () => {
-    console.log('Received SIGINT. Closing the server...');
-    await mongoose.connection.close(); // Close the MongoDB connection
-    process.exit(0); // Exit the application
+    logger.info('Received SIGINT. Closing the server...');
+    await mongoose.connection.close();
+    process.exit(0);
 });
 
-// Export the server for testing
-module.exports = server; // Exporting the server instance for testing purposes
+module.exports = server;
