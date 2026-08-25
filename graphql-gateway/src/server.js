@@ -8,7 +8,9 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   context: ({ req }) => {
-    // You can add user authentication logic here if needed
+    // Forward the Authorization header to downstream services
+    const authorization = req.headers.authorization || '';
+    return { authorization };
   },
 });
 

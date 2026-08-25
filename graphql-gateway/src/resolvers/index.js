@@ -26,14 +26,18 @@ const mapOrder = (o) => o ? ({
   status: o.status
 }) : null;
 
+// Build auth header config for axios when a token is present
+const authConfig = (authorization) =>
+  authorization ? { headers: { Authorization: authorization } } : {};
+
 const resolvers = {
   Query: {
-    getUsers: async () => {
-      const response = await axios.get(`${USER_SERVICE_URL}/users`);
+    getUsers: async (_, __, { authorization }) => {
+      const response = await axios.get(`${USER_SERVICE_URL}/users`, authConfig(authorization));
       return response.data.map(mapUser);
     },
-    getUser: async (_, { id }) => {
-      const response = await axios.get(`${USER_SERVICE_URL}/users/${id}`);
+    getUser: async (_, { id }, { authorization }) => {
+      const response = await axios.get(`${USER_SERVICE_URL}/users/${id}`, authConfig(authorization));
       return mapUser(response.data);
     },
     getProducts: async (_, { limit = 20, offset = 0 }) => {
@@ -49,8 +53,11 @@ const resolvers = {
       const response = await axios.get(`${PRODUCT_SERVICE_URL}/products/${id}`);
       return mapProduct(response.data);
     },
-    getOrders: async (_, { limit = 20, offset = 0 }) => {
-      const response = await axios.get(`${ORDER_SERVICE_URL}/orders`, { params: { limit, offset } });
+    getOrders: async (_, { limit = 20, offset = 0 }, { authorization }) => {
+      const response = await axios.get(`${ORDER_SERVICE_URL}/orders`, {
+        params: { limit, offset },
+        ...authConfig(authorization),
+      });
       return {
         data: response.data.data.map(mapOrder),
         total: response.data.total,
@@ -58,12 +65,13 @@ const resolvers = {
         offset: response.data.offset,
       };
     },
-    getOrder: async (_, { id }) => {
-      const response = await axios.get(`${ORDER_SERVICE_URL}/orders/${id}`);
+    getOrder: async (_, { id }, { authorization }) => {
+      const response = await axios.get(`${ORDER_SERVICE_URL}/orders/${id}`, authConfig(authorization));
       return mapOrder(response.data);
     },
   },
   Mutation: {
+    // register is public — no token needed
     createUser: async (_, { username, email, password }) => {
       const response = await axios.post(`${USER_SERVICE_URL}/users/register`, { username, email, password });
       return {
@@ -72,20 +80,32 @@ const resolvers = {
         email,
       };
     },
-    createProduct: async (_, { name, description, price }) => {
-      const response = await axios.post(`${PRODUCT_SERVICE_URL}/products`, { name, description, price });
+    createProduct: async (_, { name, description, price }, { authorization }) => {
+      const response = await axios.post(
+        `${PRODUCT_SERVICE_URL}/products`,
+        { name, description, price },
+        authConfig(authorization)
+      );
       return mapProduct(response.data.product);
     },
-    updateProduct: async (_, { id, ...fields }) => {
-      const response = await axios.put(`${PRODUCT_SERVICE_URL}/products/${id}`, fields);
+    updateProduct: async (_, { id, ...fields }, { authorization }) => {
+      const response = await axios.put(
+        `${PRODUCT_SERVICE_URL}/products/${id}`,
+        fields,
+        authConfig(authorization)
+      );
       return mapProduct(response.data.product);
     },
-    deleteProduct: async (_, { id }) => {
-      await axios.delete(`${PRODUCT_SERVICE_URL}/products/${id}`);
+    deleteProduct: async (_, { id }, { authorization }) => {
+      await axios.delete(`${PRODUCT_SERVICE_URL}/products/${id}`, authConfig(authorization));
       return 'Product deleted successfully';
     },
-    createOrder: async (_, { productId, userId, quantity }) => {
-      const response = await axios.post(`${ORDER_SERVICE_URL}/orders`, { productId, userId, quantity });
+    createOrder: async (_, { productId, userId, quantity }, { authorization }) => {
+      const response = await axios.post(
+        `${ORDER_SERVICE_URL}/orders`,
+        { productId, userId, quantity },
+        authConfig(authorization)
+      );
       return mapOrder(response.data);
     },
   },
