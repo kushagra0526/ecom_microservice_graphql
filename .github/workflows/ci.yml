@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-user-service:
+    name: user-service tests
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:6
+        ports:
+          - 27017:27017
+    defaults:
+      run:
+        working-directory: user-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: user-service/package-lock.json
+      - run: npm ci
+      - run: npm test -- --forceExit --ci
+        env:
+          JWT_SECRET: test-secret
+          MONGO_URI: mongodb://localhost:27017/test-user
+
+  test-product-service:
+    name: product-service tests
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:6
+        ports:
+          - 27017:27017
+    defaults:
+      run:
+        working-directory: product-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: product-service/package-lock.json
+      - run: npm ci
+      - run: npm test -- --forceExit --ci
+        env:
+          JWT_SECRET: test-secret
+          MONGO_URI: mongodb://localhost:27017/test-product
+
+  test-order-service:
+    name: order-service tests
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:6
+        ports:
+          - 27017:27017
+    defaults:
+      run:
+        working-directory: order-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: order-service/package-lock.json
+      - run: npm ci
+      - run: npm test -- --forceExit --ci
+        env:
+          JWT_SECRET: test-secret
+          MONGO_URI: mongodb://localhost:27017/test-order
+
+  test-graphql-gateway:
+    name: graphql-gateway tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: graphql-gateway
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: graphql-gateway/package-lock.json
+      - run: npm ci
+      - run: npm test -- --forceExit --ci
+        env:
+          JWT_SECRET: test-secret
