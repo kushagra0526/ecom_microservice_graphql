@@ -1,19 +1,52 @@
 @import "tailwindcss";
 
 :root {
-  --ink:     #1A1A2E;
-  --slate:   #4A5568;
-  --mist:    #F0F4F8;
-  --signal:  #2563EB;
-  --wire:    #E2E8F0;
+  --ink: #1A1A2E;
+  --slate: #4A5568;
+  --mist: #F0F4F8;
+  --signal: #2563EB;
+  --wire: #E2E8F0;
   --confirm: #10B981;
 }
 
 body {
   background-color: var(--mist);
   color: var(--ink);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
 }
 
-.font-display { font-family: 'Space Grotesk', system-ui, sans-serif; }
-.font-mono-price { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+/* ── Focus ring — token-system color, replaces browser default ── */
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* inputs/textareas use border-color shift on focus — keep outline suppressed
+   but apply the ring via box-shadow so it works inside overflow:hidden containers */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--signal);
+}
+
+/* ── Reduced motion — suppress all transitions/transforms ── */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── ProductCard hover strip — touch devices always show it ── */
+@media (hover: none) {
+  .card-strip {
+    transform: translateY(0) !important;
+  }
+}

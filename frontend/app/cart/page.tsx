@@ -58,12 +58,12 @@ export default function CartPage() {
                 {items.map((item) => (
                     <div
                         key={item.id}
-                        className="flex items-center gap-4 px-4 py-3 rounded-xl"
+                        className="flex items-center gap-3 px-3 sm:px-4 py-3 rounded-xl"
                         style={{ background: 'white', border: '1px solid var(--wire)' }}
                     >
                         {/* Icon placeholder */}
                         <div
-                            className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-lg"
+                            className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-base"
                             style={{ background: 'var(--wire)' }}
                         >
                             ⚡
@@ -74,7 +74,6 @@ export default function CartPage() {
                             <p className="text-sm font-medium truncate" style={{ color: 'var(--ink)' }}>
                                 {item.name}
                             </p>
-                            {/* Snapshot price — stored at add-time, not re-fetched */}
                             <p
                                 className="text-xs mt-0.5"
                                 style={{ fontFamily: 'var(--font-mono), monospace', color: 'var(--signal)' }}
@@ -84,7 +83,7 @@ export default function CartPage() {
                         </div>
 
                         {/* Quantity stepper */}
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
                             <button
                                 onClick={() => updateQty(item.id, item.quantity - 1)}
                                 className="w-7 h-7 rounded-md text-sm font-medium flex items-center justify-center"
@@ -94,7 +93,7 @@ export default function CartPage() {
                                 −
                             </button>
                             <span
-                                className="w-6 text-center text-sm"
+                                className="w-5 text-center text-sm"
                                 style={{ fontFamily: 'var(--font-mono), monospace', color: 'var(--ink)' }}
                             >
                                 {item.quantity}
@@ -109,9 +108,9 @@ export default function CartPage() {
                             </button>
                         </div>
 
-                        {/* Line total */}
+                        {/* Line total — hidden on very small screens to prevent overflow */}
                         <span
-                            className="text-sm font-medium w-20 text-right flex-shrink-0"
+                            className="hidden sm:inline text-sm font-medium w-16 text-right flex-shrink-0"
                             style={{ fontFamily: 'var(--font-mono), monospace', color: 'var(--ink)' }}
                         >
                             {(item.price * item.quantity).toFixed(2)}

@@ -120,6 +120,65 @@ A scalable e-commerce backend built with independent microservices. Each service
 
 ---
 
+## Frontend
+
+A Next.js 16 storefront called **Voltline** (minimal tech accessories) built against the real GraphQL gateway and REST services.
+
+### Run locally
+
+```bash
+cd frontend
+npm install
+npm run dev
+# Visit http://localhost:3000
+```
+
+### Environment variables
+
+Create `frontend/.env.local`:
+
+```env
+NEXT_PUBLIC_USER_SERVICE_URL=https://user-service-c8im.onrender.com
+NEXT_PUBLIC_GRAPHQL_URL=https://graphql-gateway-dr2p.onrender.com/graphql
+```
+
+### Screens
+
+| Screen | Path | Auth required |
+| -------- | ------ | --------------- |
+| Catalog | `/` | No |
+| Product detail | `/products/:id` | No |
+| Cart | `/cart` | No |
+| Checkout | `/checkout` | Yes — buyer |
+| Register | `/auth/register` | No |
+| Login | `/auth/login` | No |
+| Seller dashboard | `/dashboard` | Yes — seller or admin |
+
+### GraphQL coverage
+
+| Operation | Wired? | Notes |
+| ----------- | -------- | ------- |
+| `getProducts` | ✅ | Catalog, dashboard |
+| `getProduct` | ✅ | Product detail |
+| `createProduct` | ✅ | Seller dashboard |
+| `updateProduct` | ✅ | Seller dashboard |
+| `deleteProduct` | ✅ | Seller dashboard |
+| `createOrder` | ✅ | Checkout |
+| `getOrders` | ❌ | Out of scope — admin orders view not built |
+| `getOrder` | ❌ | Out of scope — no per-order detail page |
+| `getUsers` | ❌ | Out of scope — no admin user list |
+| `getUser` | ❌ | Out of scope — no user profile page |
+| `createUser` | ❌ | Registration uses `POST /users/register` directly — the GraphQL mutation has no `role` argument |
+
+### Intentional limitations
+
+- **Role enforcement** — The dashboard redirects buyers at the frontend. The real security lives in `roleMiddleware` on product-service: a buyer token gets a real 403 from the API regardless of what the frontend does.
+- **No per-owner restriction** — Any seller can edit any product. The backend has no owner field on the product model; the frontend matches this honestly.
+- **Cart is client-side only** — localStorage. Prices snapshotted at add-time. No cart persistence API exists in the backend.
+- **No admin orders UI** — `getOrders`/`getOrder` require an admin token. The backend enforces this; no frontend screen was built for it.
+
+---
+
 ### Prerequisites
 
 - Docker + Docker Compose
