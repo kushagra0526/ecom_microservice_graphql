@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+:root {
+  --ink:     #1A1A2E;
+  --slate:   #4A5568;
+  --mist:    #F0F4F8;
+  --signal:  #2563EB;
+  --wire:    #E2E8F0;
+  --confirm: #10B981;
+}
+
+body {
+  background-color: var(--mist);
+  color: var(--ink);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.font-display { font-family: 'Space Grotesk', system-ui, sans-serif; }
+.font-mono-price { font-family: 'JetBrains Mono', 'Courier New', monospace; }
