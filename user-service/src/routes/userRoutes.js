@@ -9,6 +9,7 @@ const registerSchema = Joi.object({
     username: Joi.string().trim().min(2).max(50).required(),
     email: Joi.string().email().required(),
     password: Joi.string().min(6).required(),
+    role: Joi.string().valid('buyer', 'seller').default('buyer'),
 });
 
 const loginSchema = Joi.object({
