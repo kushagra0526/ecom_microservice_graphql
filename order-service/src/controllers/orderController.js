@@ -66,3 +66,25 @@ exports.getOrderById = async (req, res, next) => {
     next(error);
   }
 };
+
+// Admin only — update order status (e.g. Pending → Completed)
+exports.updateOrderStatus = async (req, res, next) => {
+  try {
+    const { status } = req.body;
+    const allowed = ['Pending', 'Completed', 'Cancelled'];
+    if (!allowed.includes(status))
+      return res.status(400).json({ message: `Status must be one of: ${allowed.join(', ')}` });
+
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+    if (!order)
+      return res.status(404).json({ message: 'Order not found' });
+
+    res.status(200).json({ message: 'Order status updated', order });
+  } catch (error) {
+    next(error);
+  }
+};

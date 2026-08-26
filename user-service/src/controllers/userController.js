@@ -5,10 +5,13 @@ const { emitUserRegisteredEvent } = require('../events/userProducer');
 
 const registerUser = async (req, res, next) => {
     try {
-        const { username, email, password } = req.body;
+        const { username, email, password, role } = req.body;
 
         if (!username || !email || !password)
             return res.status(400).json({ message: 'Username, email, and password are required' });
+
+        // Prevent self-assigning admin
+        const assignedRole = role === 'admin' ? 'buyer' : (role || 'buyer');
 
         const existingUsername = await User.findOne({ username });
         if (existingUsername)
@@ -19,15 +22,15 @@ const registerUser = async (req, res, next) => {
             return res.status(409).json({ message: 'Email already in use' });
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ username, email, password: hashedPassword });
+        const newUser = new User({ username, email, password: hashedPassword, role: assignedRole });
         await newUser.save();
 
         // Emit Kafka event (non-blocking)
-        emitUserRegisteredEvent({ id: newUser._id, username, email }).catch(err =>
+        emitUserRegisteredEvent({ id: newUser._id, username, email, role: assignedRole }).catch(err =>
             console.error('Failed to emit user event:', err)
         );
 
-        res.status(201).json({ message: 'User registered successfully', userId: newUser._id });
+        res.status(201).json({ message: 'User registered successfully', userId: newUser._id, role: assignedRole });
     } catch (error) {
         next(error);
     }
@@ -49,12 +52,12 @@ const loginUser = async (req, res, next) => {
             return res.status(401).json({ message: 'Invalid credentials' });
 
         const token = jwt.sign(
-            { userId: user._id },
+            { userId: user._id, role: user.role },
             process.env.JWT_SECRET || 'fallback_secret',
             { expiresIn: '1h' }
         );
 
-        res.status(200).json({ message: 'Login successful', userId: user._id, token });
+        res.status(200).json({ message: 'Login successful', userId: user._id, role: user.role, token });
     } catch (error) {
         next(error);
     }

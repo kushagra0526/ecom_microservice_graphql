@@ -3,6 +3,7 @@ const Joi = require('joi');
 const router = express.Router();
 const orderController = require('../controllers/orderController');
 const auth = require('../middleware/authMiddleware');
+const role = require('../middleware/roleMiddleware');
 const validate = require('../middleware/validate');
 
 const createSchema = Joi.object({
@@ -39,69 +40,16 @@ const createSchema = Joi.object({
  *       503:
  *         description: A required upstream service is unreachable
  */
-router.post('/', auth, validate(createSchema), orderController.createOrder);
+// buyer places an order
+router.post('/', auth, role('buyer'), validate(createSchema), orderController.createOrder);
 
-/**
- * @openapi
- * /orders:
- *   get:
- *     summary: Get all orders (paginated)
- *     tags: [Orders]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 20
- *           maximum: 100
- *         description: Max number of results
- *       - in: query
- *         name: offset
- *         schema:
- *           type: integer
- *           default: 0
- *         description: Number of results to skip
- *     responses:
- *       200:
- *         description: Paginated order list
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/OrderList'
- *       401:
- *         description: Missing or invalid token
- */
-router.get('/', auth, orderController.getAllOrders);
+// admin views all orders
+router.get('/', auth, role('admin'), orderController.getAllOrders);
 
-/**
- * @openapi
- * /orders/{id}:
- *   get:
- *     summary: Get an order by ID
- *     tags: [Orders]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: MongoDB ObjectId of the order
- *     responses:
- *       200:
- *         description: Order object
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Order'
- *       401:
- *         description: Missing or invalid token
- *       404:
- *         description: Order not found
- */
-router.get('/:id', auth, orderController.getOrderById);
+// admin gets a single order by ID
+router.get('/:id', auth, role('admin'), orderController.getOrderById);
+
+// admin updates order status
+router.patch('/:id/status', auth, role('admin'), orderController.updateOrderStatus);
 
 module.exports = router;

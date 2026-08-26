@@ -2,6 +2,7 @@ const express = require('express');
 const Joi = require('joi');
 const { createProduct, getProducts, getProductById, updateProduct, deleteProduct } = require('../controllers/productController');
 const auth = require('../middleware/authMiddleware');
+const role = require('../middleware/roleMiddleware');
 const validate = require('../middleware/validate');
 
 const createSchema = Joi.object({
@@ -48,7 +49,7 @@ const router = express.Router();
  *       401:
  *         description: Missing or invalid token
  */
-router.post('/', auth, validate(createSchema), createProduct);
+router.post('/', auth, role('seller', 'admin'), validate(createSchema), createProduct);
 
 /**
  * @openapi
@@ -143,36 +144,7 @@ router.get('/:id', getProductById);
  *       404:
  *         description: Product not found
  */
-router.put('/:id', auth, validate(updateSchema), updateProduct);
-
-/**
- * @openapi
- * /products/{id}:
- *   delete:
- *     summary: Delete a product by ID
- *     tags: [Products]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Product deleted successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message: { type: string }
- *       401:
- *         description: Missing or invalid token
- *       404:
- *         description: Product not found
- */
-router.delete('/:id', auth, deleteProduct);
+router.put('/:id', auth, role('seller', 'admin'), validate(updateSchema), updateProduct);
+router.delete('/:id', auth, role('seller', 'admin'), deleteProduct);
 
 module.exports = router;
