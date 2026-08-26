@@ -4,7 +4,7 @@ module.exports = swaggerJsdoc({
     definition: {
         openapi: '3.0.0',
         info: { title: 'User Service API', version: '1.0.0', description: 'User management microservice' },
-        servers: [{ url: 'http://localhost:3001' }],
+        servers: [{ url: process.env.RENDER_EXTERNAL_URL || 'http://localhost:3001' }],
         components: {
             securitySchemes: {
                 bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
@@ -16,6 +16,7 @@ module.exports = swaggerJsdoc({
                         username: { type: 'string', minLength: 2, maxLength: 50, example: 'kushagra' },
                         email: { type: 'string', format: 'email', example: 'kush@gmail.com' },
                         password: { type: 'string', minLength: 6, example: 'secret123' },
+                        role: { type: 'string', enum: ['buyer', 'seller'], default: 'buyer', example: 'seller' },
                     },
                 },
                 LoginBody: {
