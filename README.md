@@ -101,7 +101,24 @@ A scalable e-commerce backend built with independent microservices. Each service
 
 ---
 
-## Quick Start
+## Live Demo
+
+| Service | URL |
+| --------- | ----- |
+| User Service | <https://user-service-c8im.onrender.com> |
+| Product Service | <https://product-service-kh6b.onrender.com> |
+| Order Service | <https://order-service-ygr5.onrender.com> |
+| GraphQL Gateway | <https://graphql-gateway-dr2p.onrender.com/graphql> |
+
+> Free tier — services sleep after 15 min of inactivity. Hit `/health` on each to wake them up before testing.
+
+**Swagger Docs:**
+
+- <https://user-service-c8im.onrender.com/api-docs>
+- <https://product-service-kh6b.onrender.com/api-docs>
+- <https://order-service-ygr5.onrender.com/api-docs>
+
+---
 
 ### Prerequisites
 
