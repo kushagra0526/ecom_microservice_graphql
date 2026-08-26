@@ -11,7 +11,10 @@ const axios = require('axios');
 
 const server = require('../src/app');
 
-const token = jwt.sign({ userId: 'testuser' }, process.env.JWT_SECRET || 'fallback_secret');
+// buyer token — for POST /orders
+const buyerToken = jwt.sign({ userId: 'testuser', role: 'buyer' }, process.env.JWT_SECRET || 'fallback_secret');
+// admin token — for GET /orders and GET /orders/:id
+const adminToken = jwt.sign({ userId: 'adminuser', role: 'admin' }, process.env.JWT_SECRET || 'fallback_secret');
 
 const PRODUCT_ID = '60c72b2f4f1a2a001c8f0c9e';
 const USER_ID = '60c72b2f4f1a2a001c8f0c9f';
@@ -36,7 +39,7 @@ describe('Order Service', () => {
   it('should create a new order', async () => {
     const response = await request(server)
       .post('/orders')
-      .set('Authorization', `Bearer ${token}`)
+      .set('Authorization', `Bearer ${buyerToken}`)
       .send({ productId: PRODUCT_ID, userId: USER_ID, quantity: 2 });
 
     expect(response.status).toBe(201);
@@ -46,10 +49,9 @@ describe('Order Service', () => {
   it('should get all orders', async () => {
     const response = await request(server)
       .get('/orders')
-      .set('Authorization', `Bearer ${token}`);
+      .set('Authorization', `Bearer ${adminToken}`);
 
     expect(response.status).toBe(200);
-    // Response is paginated: { data, total, limit, offset }
     expect(response.body).toHaveProperty('data');
     expect(Array.isArray(response.body.data)).toBe(true);
   });
@@ -63,7 +65,7 @@ describe('Order Service', () => {
 
     const response = await request(server)
       .get(`/orders/${newOrder._id}`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Authorization', `Bearer ${adminToken}`);
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('productId', PRODUCT_ID);
