@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, FormEvent, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../context/AuthContext';
 
-export default function LoginPage() {
+function LoginForm() {
     const { login } = useAuth();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const returnTo = searchParams.get('returnTo') || '/';
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -17,18 +19,13 @@ export default function LoginPage() {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError('');
-
-        if (!email || !password) {
-            setError('Email and password are required.');
-            return;
-        }
+        if (!email || !password) { setError('Email and password are required.'); return; }
 
         setLoading(true);
         try {
             await login(email.trim(), password);
-            router.push('/');
+            router.push(returnTo);
         } catch (err: unknown) {
-            // Surface real backend messages: "User not found", "Invalid credentials"
             setError(err instanceof Error ? err.message : 'Login failed');
         } finally {
             setLoading(false);
@@ -47,10 +44,17 @@ export default function LoginPage() {
                     </h1>
                     <p className="text-sm mb-6" style={{ color: 'var(--slate)' }}>
                         No account?{' '}
-                        <Link href="/auth/register" style={{ color: 'var(--signal)' }}>
-                            Register
-                        </Link>
+                        <Link href="/auth/register" style={{ color: 'var(--signal)' }}>Register</Link>
                     </p>
+
+                    {returnTo !== '/' && (
+                        <div
+                            className="text-xs px-4 py-2.5 rounded-lg mb-4"
+                            style={{ background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE' }}
+                        >
+                            Log in to continue to checkout
+                        </div>
+                    )}
 
                     {error && (
                         <div
@@ -73,17 +77,12 @@ export default function LoginPage() {
                                 placeholder="you@example.com"
                                 required
                                 autoComplete="email"
-                                className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-all"
-                                style={{
-                                    background: 'var(--mist)',
-                                    border: '1px solid var(--wire)',
-                                    color: 'var(--ink)',
-                                }}
+                                className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
+                                style={{ background: 'var(--mist)', border: '1px solid var(--wire)', color: 'var(--ink)' }}
                                 onFocus={(e) => (e.target.style.borderColor = 'var(--signal)')}
                                 onBlur={(e) => (e.target.style.borderColor = 'var(--wire)')}
                             />
                         </div>
-
                         <div>
                             <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--slate)' }}>
                                 Password
@@ -95,21 +94,16 @@ export default function LoginPage() {
                                 placeholder="Your password"
                                 required
                                 autoComplete="current-password"
-                                className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-all"
-                                style={{
-                                    background: 'var(--mist)',
-                                    border: '1px solid var(--wire)',
-                                    color: 'var(--ink)',
-                                }}
+                                className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
+                                style={{ background: 'var(--mist)', border: '1px solid var(--wire)', color: 'var(--ink)' }}
                                 onFocus={(e) => (e.target.style.borderColor = 'var(--signal)')}
                                 onBlur={(e) => (e.target.style.borderColor = 'var(--wire)')}
                             />
                         </div>
-
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-2.5 rounded-lg text-sm font-medium text-white transition-opacity"
+                            className="w-full py-2.5 rounded-lg text-sm font-medium text-white"
                             style={{ background: 'var(--signal)', opacity: loading ? 0.6 : 1 }}
                         >
                             {loading ? 'Logging in…' : 'Log in'}
@@ -118,5 +112,14 @@ export default function LoginPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+// Suspense boundary required for useSearchParams in Next.js app router
+export default function LoginPage() {
+    return (
+        <Suspense>
+            <LoginForm />
+        </Suspense>
     );
 }

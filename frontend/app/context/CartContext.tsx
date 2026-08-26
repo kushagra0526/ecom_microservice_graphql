@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { Product } from '../components/ProductCard';
 
-interface CartItem extends Product {
+export interface CartItem extends Product {
     quantity: number;
 }
 
@@ -11,8 +11,10 @@ interface CartContextValue {
     items: CartItem[];
     add: (product: Product) => void;
     remove: (id: string) => void;
+    updateQty: (id: string, quantity: number) => void;
     clear: () => void;
     count: number;
+    total: number;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -47,10 +49,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
 
     const remove = (id: string) => persist(items.filter((i) => i.id !== id));
+
+    const updateQty = (id: string, quantity: number) => {
+        if (quantity < 1) { remove(id); return; }
+        persist(items.map((i) => (i.id === id ? { ...i, quantity } : i)));
+    };
+
     const clear = () => persist([]);
 
+    const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    const count = items.reduce((sum, i) => sum + i.quantity, 0);
+
     return (
-        <CartContext.Provider value={{ items, add, remove, clear, count: items.reduce((s, i) => s + i.quantity, 0) }}>
+        <CartContext.Provider value={{ items, add, remove, updateQty, clear, count, total }}>
             {children}
         </CartContext.Provider>
     );
