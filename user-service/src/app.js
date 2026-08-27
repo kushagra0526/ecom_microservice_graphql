@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const mongoose = require('mongoose');
 const pinoHttp = require('pino-http');
 const rateLimit = require('express-rate-limit');
@@ -8,6 +9,7 @@ const logger = require('./logger');
 require('dotenv').config();
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.use(pinoHttp({
