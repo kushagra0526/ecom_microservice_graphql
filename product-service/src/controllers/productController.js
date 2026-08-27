@@ -3,9 +3,9 @@ const { emitProductCreatedEvent } = require('../events/productProducer');
 
 exports.createProduct = async (req, res, next) => {
   try {
-    const product = await Product.create(req.body);
+    // Attach the seller's userId so ownership can be enforced on edit/delete
+    const product = await Product.create({ ...req.body, createdBy: req.user.userId });
 
-    // Emit Kafka event (non-blocking)
     emitProductCreatedEvent(product).catch(err =>
       console.error('Failed to emit product event:', err)
     );
@@ -40,11 +40,20 @@ exports.getProductById = async (req, res, next) => {
   }
 };
 
+// Ownership check helper — admin can always edit, seller only if they created it
+const canModify = (product, user) =>
+  user.role === 'admin' || String(product.createdBy) === String(user.userId);
+
 exports.updateProduct = async (req, res, next) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: 'Product not found' });
-    res.status(200).json({ message: 'Product updated successfully', product });
+
+    if (!canModify(product, req.user))
+      return res.status(403).json({ message: 'You can only edit your own products.' });
+
+    const updated = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.status(200).json({ message: 'Product updated successfully', product: updated });
   } catch (err) {
     next(err);
   }
@@ -52,8 +61,13 @@ exports.updateProduct = async (req, res, next) => {
 
 exports.deleteProduct = async (req, res, next) => {
   try {
-    const product = await Product.findByIdAndDelete(req.params.id);
+    const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: 'Product not found' });
+
+    if (!canModify(product, req.user))
+      return res.status(403).json({ message: 'You can only delete your own products.' });
+
+    await product.deleteOne();
     res.status(200).json({ message: 'Product deleted successfully' });
   } catch (err) {
     next(err);

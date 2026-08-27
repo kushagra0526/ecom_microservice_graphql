@@ -8,7 +8,7 @@ jest.mock('../src/events/productConsumer', () => ({}));
 const server = require('../src/app');
 
 // Generate a valid token for protected routes — seller role required for write operations
-const token = jwt.sign({ userId: 'testuser', role: 'seller' }, process.env.JWT_SECRET || 'fallback_secret');
+const token = jwt.sign({ userId: 'testseller123456789012', role: 'seller' }, process.env.JWT_SECRET || 'fallback_secret');
 
 describe('Product Service', () => {
   beforeAll(async () => {

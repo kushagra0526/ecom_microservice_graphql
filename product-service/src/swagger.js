@@ -33,6 +33,7 @@ module.exports = swaggerJsdoc({
                         name: { type: 'string', example: 'iPhone 15' },
                         description: { type: 'string', example: 'Apple smartphone' },
                         price: { type: 'number', example: 999.99 },
+                        createdBy: { type: 'string', example: '6751abc123def456789010' },
                         createdAt: { type: 'string', format: 'date-time' },
                     },
                 },
