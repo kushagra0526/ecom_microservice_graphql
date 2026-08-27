@@ -15,7 +15,8 @@ const mapProduct = (p) => p ? ({
   id: String(p._id || p.id),
   name: p.name,
   description: p.description,
-  price: p.price
+  price: p.price,
+  createdBy: p.createdBy ? String(p.createdBy) : null,
 }) : null;
 
 const mapOrder = (o) => o ? ({

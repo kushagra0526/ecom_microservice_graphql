@@ -12,6 +12,7 @@ const typeDefs = gql`
     name: String!
     description: String!
     price: Float!
+    createdBy: String
   }
 
   type Order {

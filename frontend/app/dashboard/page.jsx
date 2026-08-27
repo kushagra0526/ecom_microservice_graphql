@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import { gql } from '../lib/gql';
 
-const GET_PRODUCTS = `query { getProducts(limit: 100, offset: 0) { data { id name description price } } }`;
+const GET_PRODUCTS = `query { getProducts(limit: 100, offset: 0) { data { id name description price createdBy } } }`;
 const CREATE_PRODUCT = `mutation CreateProduct($name: String!, $description: String!, $price: Float!) {
-  createProduct(name: $name, description: $description, price: $price) { id name description price }
+  createProduct(name: $name, description: $description, price: $price) { id name description price createdBy }
 }`;
 const UPDATE_PRODUCT = `mutation UpdateProduct($id: ID!, $name: String, $description: String, $price: Float) {
-  updateProduct(id: $id, name: $name, description: $description, price: $price) { id name description price }
+  updateProduct(id: $id, name: $name, description: $description, price: $price) { id name description price createdBy }
 }`;
 const DELETE_PRODUCT = `mutation DeleteProduct($id: ID!) { deleteProduct(id: $id) }`;
 
@@ -117,8 +117,7 @@ export default function DashboardPage() {
 
             <p className="text-xs mb-6" style={{ color: 'var(--slate)' }}>
                 Accessible to <strong>seller</strong> and <strong>admin</strong> roles.
-                Role is enforced server-side — a buyer token receives a real 403 from the API.
-                Any seller can edit any product (no per-owner restriction in the current backend).
+                Sellers can only edit or delete their own products. Admins can modify any product.
             </p>
 
             {feedback && (
@@ -147,52 +146,63 @@ export default function DashboardPage() {
                         <span>PRODUCT</span><span>PRICE</span><span></span>
                     </div>
 
-                    {products.map((p, i) => (
-                        <div key={p.id} className="px-4 py-3"
-                            style={{ background: i % 2 === 0 ? 'white' : 'var(--mist)', borderTop: '1px solid var(--wire)' }}>
-                            {/* Desktop row */}
-                            <div className="hidden sm:grid gap-4 items-center"
-                                style={{ gridTemplateColumns: '1fr 80px 110px' }}>
-                                <div className="min-w-0">
-                                    <p className="text-sm font-medium truncate" style={{ color: 'var(--ink)' }}>{p.name}</p>
-                                    <p className="text-xs truncate mt-0.5" style={{ color: 'var(--slate)' }}>{p.description}</p>
-                                </div>
-                                <span className="text-sm" style={{ fontFamily: 'var(--font-mono), monospace', color: 'var(--signal)' }}>
-                                    {p.price.toFixed(2)}
-                                </span>
-                                <div className="flex gap-2 justify-end">
-                                    <button onClick={() => openEdit(p)} className="text-xs px-3 py-1.5 rounded-md"
-                                        style={{ background: 'var(--wire)', color: 'var(--ink)' }}>Edit</button>
-                                    <button onClick={() => handleDelete(p.id)} disabled={deleteId === p.id}
-                                        className="text-xs px-3 py-1.5 rounded-md text-white"
-                                        style={{ background: '#EF4444', opacity: deleteId === p.id ? 0.5 : 1 }}>
-                                        {deleteId === p.id ? '…' : 'Delete'}
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Mobile stacked */}
-                            <div className="sm:hidden">
-                                <div className="flex items-start justify-between gap-2 mb-2">
-                                    <div>
-                                        <p className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{p.name}</p>
-                                        <span className="text-xs" style={{ fontFamily: 'var(--font-mono), monospace', color: 'var(--signal)' }}>
-                                            {p.price.toFixed(2)} USD
-                                        </span>
+                    {products.map((p, i) => {
+                        const canModify = user.role === 'admin' || p.createdBy === user.userId;
+                        return (
+                            <div key={p.id} className="px-4 py-3"
+                                style={{ background: i % 2 === 0 ? 'white' : 'var(--mist)', borderTop: '1px solid var(--wire)' }}>
+                                {/* Desktop row */}
+                                <div className="hidden sm:grid gap-4 items-center"
+                                    style={{ gridTemplateColumns: '1fr 80px 110px' }}>
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium truncate" style={{ color: 'var(--ink)' }}>{p.name}</p>
+                                        <p className="text-xs truncate mt-0.5" style={{ color: 'var(--slate)' }}>{p.description}</p>
+                                    </div>
+                                    <span className="text-sm" style={{ fontFamily: 'var(--font-mono), monospace', color: 'var(--signal)' }}>
+                                        {p.price.toFixed(2)}
+                                    </span>
+                                    <div className="flex gap-2 justify-end">
+                                        {canModify ? (
+                                            <>
+                                                <button onClick={() => openEdit(p)} className="text-xs px-3 py-1.5 rounded-md"
+                                                    style={{ background: 'var(--wire)', color: 'var(--ink)' }}>Edit</button>
+                                                <button onClick={() => handleDelete(p.id)} disabled={deleteId === p.id}
+                                                    className="text-xs px-3 py-1.5 rounded-md text-white"
+                                                    style={{ background: '#EF4444', opacity: deleteId === p.id ? 0.5 : 1 }}>
+                                                    {deleteId === p.id ? '…' : 'Delete'}
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <span className="text-xs" style={{ color: 'var(--slate)' }}>not yours</span>
+                                        )}
                                     </div>
                                 </div>
-                                <div className="flex gap-2">
-                                    <button onClick={() => openEdit(p)} className="flex-1 text-xs py-1.5 rounded-md"
-                                        style={{ background: 'var(--wire)', color: 'var(--ink)' }}>Edit</button>
-                                    <button onClick={() => handleDelete(p.id)} disabled={deleteId === p.id}
-                                        className="flex-1 text-xs py-1.5 rounded-md text-white"
-                                        style={{ background: '#EF4444', opacity: deleteId === p.id ? 0.5 : 1 }}>
-                                        {deleteId === p.id ? '…' : 'Delete'}
-                                    </button>
+
+                                {/* Mobile stacked */}
+                                <div className="sm:hidden">
+                                    <div className="flex items-start justify-between gap-2 mb-2">
+                                        <div>
+                                            <p className="text-sm font-medium" style={{ color: 'var(--ink)' }}>{p.name}</p>
+                                            <span className="text-xs" style={{ fontFamily: 'var(--font-mono), monospace', color: 'var(--signal)' }}>
+                                                {p.price.toFixed(2)} USD
+                                            </span>
+                                        </div>
+                                    </div>
+                                    {canModify && (
+                                        <div className="flex gap-2">
+                                            <button onClick={() => openEdit(p)} className="flex-1 text-xs py-1.5 rounded-md"
+                                                style={{ background: 'var(--wire)', color: 'var(--ink)' }}>Edit</button>
+                                            <button onClick={() => handleDelete(p.id)} disabled={deleteId === p.id}
+                                                className="flex-1 text-xs py-1.5 rounded-md text-white"
+                                                style={{ background: '#EF4444', opacity: deleteId === p.id ? 0.5 : 1 }}>
+                                                {deleteId === p.id ? '…' : 'Delete'}
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
 
