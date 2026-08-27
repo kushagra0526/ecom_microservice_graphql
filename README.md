@@ -16,7 +16,7 @@
 
 ## Overview
 
-A scalable e-commerce backend built with independent microservices. Each service owns its database, communicates asynchronously via Kafka, and exposes a REST API — unified through a single GraphQL gateway.
+A scalable e-commerce backend built with independent microservices. Each service owns its database, communicates asynchronously via Kafka, and exposes a REST API — unified through a single GraphQL gateway. Includes a Next.js storefront built against the real APIs.
 
 ---
 
@@ -24,7 +24,7 @@ A scalable e-commerce backend built with independent microservices. Each service
 
 ```
 ┌────────────────────────────────────────────────────┐
-│                    Clients                         │
+│              Voltline Frontend (Next.js)            │
 └───────────────────────┬────────────────────────────┘
                         │
               ┌─────────▼──────────┐
@@ -36,7 +36,6 @@ A scalable e-commerce backend built with independent microservices. Each service
          │Service │  │Service│ │  Service  │
          │  :3001 │  │ :3002 │ │   :3003   │
          └───┬────┘  └──┬────┘ └────┬──────┘
-             │          │           │
              └──────────┼───────────┘
                         │
               ┌─────────▼──────────┐
@@ -44,8 +43,7 @@ A scalable e-commerce backend built with independent microservices. Each service
               └──────────┬─────────┘
                          │
               ┌──────────▼─────────┐
-              │      MongoDB       │
-              │ (per-service DB)   │
+              │  MongoDB (per-svc) │
               └────────────────────┘
 ```
 
@@ -67,22 +65,23 @@ A scalable e-commerce backend built with independent microservices. Each service
 | Testing | Jest + Supertest |
 | CI/CD | GitHub Actions |
 | Containers | Docker + Docker Compose |
+| Frontend | Next.js 14 + React 18 (JavaScript) |
 
 ---
 
 ## Features
 
-- **3 Roles** — `buyer`, `seller`, `admin` with role-based access control
-- **JWT Auth** — role embedded in token, stateless RBAC across services
-- **Kafka Events** — async pub/sub between services (KafkaJS, Upstash-ready)
+- **3 Roles** — `buyer`, `seller`, `admin` with server-side RBAC
+- **JWT Auth** — role embedded in token, stateless across all services
+- **Kafka Events** — async pub/sub (KafkaJS, works with local Docker or Aiven)
 - **GraphQL Gateway** — unified API for all 3 services
 - **Pagination** — `?limit` & `?offset` on all list endpoints
 - **Joi Validation** — schema validation on every write endpoint
 - **Health Checks** — `GET /health` on every service
 - **Swagger Docs** — `GET /api-docs` on every service
-- **Pino Logging** — structured JSON logs, auth tokens redacted
+- **Pino Logging** — structured JSON logs, tokens redacted
 - **Rate Limiting** — 100 req/15min global, 10 req/15min on auth routes
-- **CI Pipeline** — GitHub Actions runs all tests on every push
+- **CI Pipeline** — GitHub Actions, all 4 services tested on every push
 
 ---
 
@@ -97,7 +96,7 @@ A scalable e-commerce backend built with independent microservices. Each service
 | View all orders | ❌ | ❌ | ✅ |
 | Update order status | ❌ | ❌ | ✅ |
 
-> `admin` cannot be self-assigned on register — set it directly in MongoDB.
+> `admin` cannot be self-assigned — set it directly in MongoDB.
 
 ---
 
@@ -110,7 +109,7 @@ A scalable e-commerce backend built with independent microservices. Each service
 | Order Service | <https://order-service-ygr5.onrender.com> |
 | GraphQL Gateway | <https://graphql-gateway-dr2p.onrender.com/graphql> |
 
-> Free tier — services sleep after 15 min of inactivity. Hit `/health` on each to wake them up before testing.
+> Free tier — services sleep after 15 min of inactivity. Hit `/health` on each to wake them before testing.
 
 **Swagger Docs:**
 
@@ -120,9 +119,9 @@ A scalable e-commerce backend built with independent microservices. Each service
 
 ---
 
-## Frontend
+## Frontend — Voltline
 
-A Next.js 16 storefront called **Voltline** (minimal tech accessories) built against the real GraphQL gateway and REST services.
+A **Next.js 14 + React 18** storefront for the e-commerce platform, written in plain JavaScript. Category: minimal everyday carry tech (cables, chargers, stands).
 
 ### Run locally
 
@@ -142,119 +141,74 @@ NEXT_PUBLIC_USER_SERVICE_URL=https://user-service-c8im.onrender.com
 NEXT_PUBLIC_GRAPHQL_URL=https://graphql-gateway-dr2p.onrender.com/graphql
 ```
 
+### Deploy on Vercel
+
+1. Import repo on [vercel.com](https://vercel.com)
+2. Set **Root Directory** to `frontend`
+3. Add the 2 env vars above
+4. Deploy
+
 ### Screens
 
-| Screen | Path | Auth required |
-| -------- | ------ | --------------- |
+| Screen | Path | Auth |
+| -------- | ------ | ------ |
 | Catalog | `/` | No |
 | Product detail | `/products/:id` | No |
 | Cart | `/cart` | No |
-| Checkout | `/checkout` | Yes — buyer |
+| Checkout | `/checkout` | buyer |
 | Register | `/auth/register` | No |
 | Login | `/auth/login` | No |
-| Seller dashboard | `/dashboard` | Yes — seller or admin |
+| Seller dashboard | `/dashboard` | seller / admin |
 
 ### GraphQL coverage
 
-| Operation | Wired? | Notes |
-| ----------- | -------- | ------- |
+| Operation | Used? | Notes |
+| ----------- | ------- | ------- |
 | `getProducts` | ✅ | Catalog, dashboard |
 | `getProduct` | ✅ | Product detail |
 | `createProduct` | ✅ | Seller dashboard |
 | `updateProduct` | ✅ | Seller dashboard |
 | `deleteProduct` | ✅ | Seller dashboard |
 | `createOrder` | ✅ | Checkout |
-| `getOrders` | ❌ | Out of scope — admin orders view not built |
-| `getOrder` | ❌ | Out of scope — no per-order detail page |
-| `getUsers` | ❌ | Out of scope — no admin user list |
-| `getUser` | ❌ | Out of scope — no user profile page |
-| `createUser` | ❌ | Registration uses `POST /users/register` directly — the GraphQL mutation has no `role` argument |
+| `getOrders` | ❌ | No admin orders UI |
+| `getOrder` | ❌ | No per-order detail page |
+| `getUsers` | ❌ | No admin user list |
+| `getUser` | ❌ | No user profile page |
+| `createUser` | ❌ | Registration uses REST — GraphQL mutation has no `role` arg |
 
 ### Intentional limitations
 
-- **Role enforcement** — The dashboard redirects buyers at the frontend. The real security lives in `roleMiddleware` on product-service: a buyer token gets a real 403 from the API regardless of what the frontend does.
-- **No per-owner restriction** — Any seller can edit any product. The backend has no owner field on the product model; the frontend matches this honestly.
-- **Cart is client-side only** — localStorage. Prices snapshotted at add-time. No cart persistence API exists in the backend.
-- **No admin orders UI** — `getOrders`/`getOrder` require an admin token. The backend enforces this; no frontend screen was built for it.
+- **Role enforcement** — dashboard redirects buyers as UX. Real security is `roleMiddleware` on product-service — buyer token gets real 403 from API.
+- **No per-owner restriction** — any seller can edit any product. Backend has no owner field.
+- **Cart is client-side only** — localStorage, prices snapshotted at add-time.
+- **No admin orders UI** — `getOrders`/`getOrder` require admin token, not built.
 
 ---
 
-### Prerequisites
-
-- Docker + Docker Compose
-
-### Run locally
+## Quick Start (Backend)
 
 ```bash
 git clone https://github.com/kushagra0526/ecom_microservice_graphql.git
 cd ecom_microservice_graphql
 
-# Set your JWT secret
 echo "JWT_SECRET=your_secret_here" > .env
 
-# Start everything
 docker-compose up -d
 ```
 
-Wait ~20 seconds for Kafka to initialize, then check:
+Check services are up:
 
 ```bash
-curl http://localhost:3001/health   # user-service
-curl http://localhost:3002/health   # product-service
-curl http://localhost:3003/health   # order-service
+curl http://localhost:3001/health
+curl http://localhost:3002/health
+curl http://localhost:3003/health
 ```
 
 ---
 
-## API Reference
+## REST Endpoints
 
-### Swagger UI (interactive docs)
-
-| Service | URL |
-| --------- | ----- |
-| User | <http://localhost:3001/api-docs> |
-| Product | <http://localhost:3002/api-docs> |
-| Order | <http://localhost:3003/api-docs> |
-| GraphQL | <http://localhost:4000/graphql> |
-
----
-
-### Authentication Flow
-
-**1. Register**
-
-```bash
-POST http://localhost:3001/users/register
-{
-  "username": "alice",
-  "email": "alice@example.com",
-  "password": "pass123",
-  "role": "seller"          # buyer (default) | seller
-}
-```
-
-**2. Login**
-
-```bash
-POST http://localhost:3001/users/login
-{
-  "email": "alice@example.com",
-  "password": "pass123"
-}
-# Returns: { "token": "eyJ...", "role": "seller", "userId": "..." }
-```
-
-**3. Use the token**
-
-```
-Authorization: Bearer eyJ...
-```
-
----
-
-### REST Endpoints
-
-**User Service** — `http://localhost:3001`
+**User Service — :3001**
 
 | Method | Route | Auth | Role |
 | -------- | ------- | ------ | ------ |
@@ -264,7 +218,7 @@ Authorization: Bearer eyJ...
 | GET | `/users/:id` | ✅ | any |
 | GET | `/health` | ❌ | — |
 
-**Product Service** — `http://localhost:3002`
+**Product Service — :3002**
 
 | Method | Route | Auth | Role |
 | -------- | ------- | ------ | ------ |
@@ -275,7 +229,7 @@ Authorization: Bearer eyJ...
 | DELETE | `/products/:id` | ✅ | seller, admin |
 | GET | `/health` | ❌ | — |
 
-**Order Service** — `http://localhost:3003`
+**Order Service — :3003**
 
 | Method | Route | Auth | Role |
 | -------- | ------- | ------ | ------ |
@@ -285,55 +239,26 @@ Authorization: Bearer eyJ...
 | PATCH | `/orders/:id/status` | ✅ | admin |
 | GET | `/health` | ❌ | — |
 
-**Status values:** `Pending` → `Completed` or `Cancelled`
-
 ---
 
-### GraphQL Examples
+## Authentication
 
-```graphql
-# Login
-mutation {
-  loginUser(email: "alice@example.com", password: "pass123") {
-    token
-    role
-  }
-}
+```bash
+# Register
+POST /users/register
+{ "username": "alice", "email": "alice@example.com", "password": "pass123", "role": "seller" }
 
-# Browse products (paginated)
-query {
-  getProducts(limit: 10, offset: 0) {
-    data { _id name price }
-    total
-  }
-}
+# Login — returns token
+POST /users/login
+{ "email": "alice@example.com", "password": "pass123" }
 
-# Create product (seller token in HTTP headers)
-mutation {
-  createProduct(name: "MacBook Pro", description: "M3 chip", price: 1999.99) {
-    _id name price
-  }
-}
-
-# Place order (buyer token)
-mutation {
-  createOrder(productId: "...", userId: "...", quantity: 2) {
-    _id status
-  }
-}
-```
-
-Add token in GraphQL headers:
-
-```json
-{ "Authorization": "Bearer eyJ..." }
+# Use token on protected routes
+Authorization: Bearer eyJ...
 ```
 
 ---
 
 ## Kafka Events
-
-Each service publishes and consumes events on its own topic:
 
 | Topic | Producer | Event |
 | ------- | ---------- | ------- |
@@ -341,40 +266,7 @@ Each service publishes and consumes events on its own topic:
 | `product-events` | product-service | `ProductCreated` |
 | `order-events` | order-service | Order data |
 
-**Works with:**
-
-- Local Docker Kafka — just set `KAFKA_BROKER=kafka:29092`
-- Upstash Kafka — add `KAFKA_USERNAME` + `KAFKA_PASSWORD` and SSL kicks in automatically
-
----
-
-## Environment Variables
-
-**Root `.env`**
-
-```env
-JWT_SECRET=your_strong_secret
-```
-
-**order-service** (extra vars)
-
-```env
-USER_SERVICE_URL=http://user-service:3001
-PRODUCT_SERVICE_URL=http://product-service:3002
-```
-
-**All services**
-
-```env
-MONGO_URI=mongodb://mongodb:27017/<service-name>
-PORT=3001                      # 3001 / 3002 / 3003 / 4000
-JWT_SECRET=your_strong_secret
-KAFKA_BROKER=kafka:29092
-
-# Upstash Kafka (cloud deployment)
-# KAFKA_USERNAME=...
-# KAFKA_PASSWORD=...
-```
+Works with local Docker Kafka (`KAFKA_BROKER=kafka:29092`) or Aiven cloud Kafka (add `KAFKA_USERNAME` + `KAFKA_PASSWORD`).
 
 ---
 
@@ -387,15 +279,26 @@ cd order-service   && npm test
 cd graphql-gateway && npm test
 ```
 
-CI runs automatically on every push and pull request to `main`.
+CI runs on every push and PR to `main`.
 
 ---
 
-## Deployment (Render + MongoDB Atlas + Upstash)
+## Environment Variables
 
-1. **MongoDB Atlas** — create 3 free databases (`user-service`, `product-service`, `order-service`)
-2. **Upstash Kafka** — create a cluster, add topics `user-events`, `product-events`, `order-events`
-3. **Render** — deploy 4 Web Services, one per directory, with environment variables set:
+**Root `.env`**
+
+```env
+JWT_SECRET=your_strong_secret
+```
+
+**Each service** also needs `MONGO_URI`, `PORT`, `JWT_SECRET`, `KAFKA_BROKER`.  
+**order-service** additionally needs `USER_SERVICE_URL` and `PRODUCT_SERVICE_URL`.
+
+---
+
+## Deployment
+
+### Backend (Render + MongoDB Atlas + Aiven Kafka)
 
 | Service | Root Dir | Start Command |
 | --------- | ---------- | --------------- |
@@ -404,7 +307,11 @@ CI runs automatically on every push and pull request to `main`.
 | order-service | `order-service` | `node src/app.js` |
 | graphql-gateway | `graphql-gateway` | `node src/server.js` |
 
-Deploy `user-service` and `product-service` first, then set their Render URLs as env vars in `order-service` and `graphql-gateway`.
+Deploy user-service and product-service first, then set their URLs as env vars in order-service and graphql-gateway.
+
+### Frontend (Vercel)
+
+Root Directory: `frontend` — add env vars and deploy.
 
 ---
 
@@ -412,26 +319,21 @@ Deploy `user-service` and `product-service` first, then set their Render URLs as
 
 ```
 ├── user-service/
-│   ├── src/
-│   │   ├── controllers/    # Request handlers
-│   │   ├── events/         # Kafka producer + consumer
-│   │   ├── middleware/      # auth, validate, errorHandler, role
-│   │   ├── models/         # Mongoose schemas
-│   │   ├── routes/         # Express routes + Swagger annotations
-│   │   ├── services/       # Business logic
-│   │   ├── app.js          # Express setup
-│   │   ├── logger.js       # Pino logger
-│   │   └── swagger.js      # OpenAPI config
-│   └── tests/
-│
-├── product-service/        # same structure
-├── order-service/          # same structure + roleMiddleware
+├── product-service/
+├── order-service/
 ├── graphql-gateway/
-│   └── src/
-│       ├── schemas/        # GraphQL type definitions
-│       ├── resolvers/      # Query + Mutation resolvers
-│       └── server.js       # Apollo Server
-│
+├── frontend/              # Next.js 14 storefront (JavaScript)
+│   ├── app/
+│   │   ├── components/    # Nav, ProductCard, ProductCardSkeleton
+│   │   ├── context/       # AuthContext, CartContext
+│   │   ├── lib/           # gql.js (GraphQL client)
+│   │   ├── auth/          # login, register pages
+│   │   ├── cart/          # cart page
+│   │   ├── checkout/      # checkout + order confirmation
+│   │   ├── dashboard/     # seller product CRUD
+│   │   └── products/      # product detail page
+│   └── scripts/
+│       └── seed.mjs       # seeds 12 sample products
 ├── .github/workflows/ci.yml
 ├── docker-compose.yml
 └── README.md
@@ -446,7 +348,5 @@ Deploy `user-service` and `product-service` first, then set their Render URLs as
 ---
 
 <div align="center">
-
-⭐ If this helped you, consider starring the repo!
-
+⭐ Star the repo if this helped!
 </div>
