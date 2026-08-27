@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --ink: #1A1A2E;
@@ -12,18 +14,16 @@
 body {
   background-color: var(--mist);
   color: var(--ink);
-  font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
 }
 
-/* ── Focus ring — token-system color, replaces browser default ── */
+/* Focus ring — token-system color, replaces browser default */
 :focus-visible {
   outline: 2px solid var(--signal);
   outline-offset: 2px;
   border-radius: 4px;
 }
 
-/* inputs/textareas use border-color shift on focus — keep outline suppressed
-   but apply the ring via box-shadow so it works inside overflow:hidden containers */
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
@@ -31,7 +31,7 @@ select:focus-visible {
   box-shadow: 0 0 0 2px var(--signal);
 }
 
-/* ── Reduced motion — suppress all transitions/transforms ── */
+/* Reduced motion — suppress all transitions/animations */
 @media (prefers-reduced-motion: reduce) {
 
   *,
@@ -44,7 +44,7 @@ select:focus-visible {
   }
 }
 
-/* ── ProductCard hover strip — touch devices always show it ── */
+/* Add-to-cart strip — always visible on touch devices */
 @media (hover: none) {
   .card-strip {
     transform: translateY(0) !important;

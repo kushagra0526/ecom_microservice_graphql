@@ -1,27 +1,12 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { Product } from '../components/ProductCard';
+import { createContext, useContext, useEffect, useState } from 'react';
 
-export interface CartItem extends Product {
-    quantity: number;
-}
-
-interface CartContextValue {
-    items: CartItem[];
-    add: (product: Product) => void;
-    remove: (id: string) => void;
-    updateQty: (id: string, quantity: number) => void;
-    clear: () => void;
-    count: number;
-    total: number;
-}
-
-const CartContext = createContext<CartContextValue | null>(null);
+const CartContext = createContext(null);
 const LS_KEY = 'voltline_cart';
 
-export function CartProvider({ children }: { children: ReactNode }) {
-    const [items, setItems] = useState<CartItem[]>([]);
+export function CartProvider({ children }) {
+    const [items, setItems] = useState([]);
 
     useEffect(() => {
         try {
@@ -32,12 +17,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    const persist = (next: CartItem[]) => {
+    const persist = (next) => {
         setItems(next);
         localStorage.setItem(LS_KEY, JSON.stringify(next));
     };
 
-    const add = (product: Product) => {
+    const add = (product) => {
         setItems((prev) => {
             const existing = prev.find((i) => i.id === product.id);
             const next = existing
@@ -48,9 +33,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         });
     };
 
-    const remove = (id: string) => persist(items.filter((i) => i.id !== id));
+    const remove = (id) => persist(items.filter((i) => i.id !== id));
 
-    const updateQty = (id: string, quantity: number) => {
+    const updateQty = (id, quantity) => {
         if (quantity < 1) { remove(id); return; }
         persist(items.map((i) => (i.id === id ? { ...i, quantity } : i)));
     };

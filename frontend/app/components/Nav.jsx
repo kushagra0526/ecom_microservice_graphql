@@ -13,7 +13,6 @@ export default function Nav() {
             className="w-full px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-50"
             style={{ background: 'var(--ink)' }}
         >
-            {/* Logo */}
             <Link
                 href="/"
                 className="text-lg sm:text-xl tracking-tight text-white flex-shrink-0"
@@ -22,26 +21,19 @@ export default function Nav() {
                 Voltline
             </Link>
 
-            {/* Center links — desktop only */}
+            {/* Center — desktop only */}
             <div className="hidden md:flex gap-8">
-                <Link href="/" className="text-sm text-gray-300 hover:text-white transition-colors">
-                    Shop
-                </Link>
+                <Link href="/" className="text-sm text-gray-300 hover:text-white transition-colors">Shop</Link>
                 {user?.role === 'seller' && (
-                    <Link href="/dashboard" className="text-sm text-gray-300 hover:text-white transition-colors">
-                        Dashboard
-                    </Link>
+                    <Link href="/dashboard" className="text-sm text-gray-300 hover:text-white transition-colors">Dashboard</Link>
                 )}
                 {user?.role === 'admin' && (
-                    <Link href="/orders" className="text-sm text-gray-300 hover:text-white transition-colors">
-                        Orders
-                    </Link>
+                    <Link href="/orders" className="text-sm text-gray-300 hover:text-white transition-colors">Orders</Link>
                 )}
             </div>
 
-            {/* Right cluster — tightened for mobile */}
+            {/* Right cluster */}
             <div className="flex items-center gap-3 sm:gap-5">
-                {/* Cart */}
                 <Link href="/cart" className="relative text-sm text-gray-300 hover:text-white transition-colors">
                     Cart
                     {count > 0 && (
@@ -56,9 +48,7 @@ export default function Nav() {
 
                 {user ? (
                     <>
-                        {/* Role badge — hidden below sm to save space */}
                         <span className="text-xs text-gray-400 hidden sm:block">{user.role}</span>
-                        {/* Seller/admin shortcut on mobile */}
                         {user.role !== 'buyer' && (
                             <Link
                                 href={user.role === 'admin' ? '/orders' : '/dashboard'}
@@ -67,21 +57,13 @@ export default function Nav() {
                                 {user.role === 'admin' ? 'Orders' : 'Dash'}
                             </Link>
                         )}
-                        <button
-                            onClick={logout}
-                            className="text-sm text-gray-300 hover:text-white transition-colors"
-                        >
+                        <button onClick={logout} className="text-sm text-gray-300 hover:text-white transition-colors">
                             Log out
                         </button>
                     </>
                 ) : (
                     <>
-                        <Link
-                            href="/auth/login"
-                            className="text-sm text-gray-300 hover:text-white transition-colors"
-                        >
-                            Log in
-                        </Link>
+                        <Link href="/auth/login" className="text-sm text-gray-300 hover:text-white transition-colors">Log in</Link>
                         <Link
                             href="/auth/register"
                             className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 rounded-md text-white flex-shrink-0"

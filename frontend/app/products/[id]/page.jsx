@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { gql } from '../../lib/gql';
-import { Product } from '../../components/ProductCard';
 import { useCart } from '../../context/CartContext';
 
 const GET_PRODUCT = `
@@ -13,19 +12,17 @@ const GET_PRODUCT = `
   }
 `;
 
-interface ProductResult { getProduct: Product }
-
 export default function ProductDetailPage() {
-    const { id } = useParams<{ id: string }>();
+    const { id } = useParams();
     const router = useRouter();
     const { add, items } = useCart();
 
-    const [product, setProduct] = useState<Product | null>(null);
-    const [status, setStatus] = useState<'loading' | 'ok' | 'error' | 'notfound'>('loading');
+    const [product, setProduct] = useState(null);
+    const [status, setStatus] = useState('loading');
     const [added, setAdded] = useState(false);
 
     useEffect(() => {
-        gql<ProductResult>(GET_PRODUCT, { id })
+        gql(GET_PRODUCT, { id })
             .then((data) => {
                 if (!data.getProduct) { setStatus('notfound'); return; }
                 setProduct(data.getProduct);
@@ -35,7 +32,6 @@ export default function ProductDetailPage() {
     }, [id]);
 
     const handleAdd = () => {
-        if (!product) return;
         add(product);
         setAdded(true);
         setTimeout(() => setAdded(false), 2000);
@@ -64,9 +60,7 @@ export default function ProductDetailPage() {
                 <p className="text-lg font-medium mb-2" style={{ fontFamily: 'var(--font-space), system-ui' }}>
                     Product not found
                 </p>
-                <p className="text-sm mb-6" style={{ color: 'var(--slate)' }}>
-                    This item may have been removed.
-                </p>
+                <p className="text-sm mb-6" style={{ color: 'var(--slate)' }}>This item may have been removed.</p>
                 <Link href="/" className="text-sm px-5 py-2 rounded-lg text-white" style={{ background: 'var(--signal)' }}>
                     Back to catalog
                 </Link>
@@ -87,45 +81,33 @@ export default function ProductDetailPage() {
 
     return (
         <div className="max-w-4xl mx-auto px-6 py-12">
-            {/* Breadcrumb */}
             <Link href="/" className="text-xs mb-8 inline-block" style={{ color: 'var(--slate)' }}>
                 ← Back to catalog
             </Link>
 
             <div className="grid md:grid-cols-2 gap-10 mt-4">
-                {/* Image */}
-                <div
-                    className="rounded-xl h-80 flex items-center justify-center text-6xl"
-                    style={{ background: 'var(--wire)' }}
-                >
+                <div className="rounded-xl h-80 flex items-center justify-center text-6xl" style={{ background: 'var(--wire)' }}>
                     ⚡
                 </div>
 
-                {/* Details — sticky on desktop */}
                 <div className="md:sticky md:top-24 self-start">
-                    <h1
-                        className="text-2xl font-semibold mb-3 leading-snug"
-                        style={{ fontFamily: 'var(--font-space), system-ui', color: 'var(--ink)' }}
-                    >
-                        {product!.name}
+                    <h1 className="text-2xl font-semibold mb-3 leading-snug"
+                        style={{ fontFamily: 'var(--font-space), system-ui', color: 'var(--ink)' }}>
+                        {product.name}
                     </h1>
-
                     <p className="text-sm leading-relaxed mb-6" style={{ color: 'var(--slate)' }}>
-                        {product!.description}
+                        {product.description}
                     </p>
 
                     {/* Signature price */}
                     <div className="mb-6">
-                        <span
-                            className="text-3xl font-medium"
-                            style={{ fontFamily: 'var(--font-mono), monospace', color: 'var(--signal)' }}
-                        >
-                            {product!.price.toFixed(2)}
+                        <span className="text-3xl font-medium"
+                            style={{ fontFamily: 'var(--font-mono), monospace', color: 'var(--signal)' }}>
+                            {product.price.toFixed(2)}
                         </span>
                         <span className="text-sm ml-2" style={{ color: 'var(--slate)' }}>USD</span>
                     </div>
 
-                    {/* Stock indicator */}
                     <div className="flex items-center gap-2 mb-6">
                         <span className="w-2 h-2 rounded-full" style={{ background: 'var(--confirm)' }} />
                         <span className="text-xs" style={{ color: 'var(--slate)' }}>In stock</span>
@@ -139,9 +121,7 @@ export default function ProductDetailPage() {
                     <button
                         onClick={handleAdd}
                         className="w-full py-3 rounded-lg text-sm font-medium text-white transition-all"
-                        style={{
-                            background: added ? 'var(--confirm)' : 'var(--signal)',
-                        }}
+                        style={{ background: added ? 'var(--confirm)' : 'var(--signal)' }}
                     >
                         {added ? '✓ Added to cart' : 'Add to cart'}
                     </button>

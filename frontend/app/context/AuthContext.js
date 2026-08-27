@@ -1,27 +1,14 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
-interface AuthUser {
-    userId: string;
-    role: 'buyer' | 'seller' | 'admin';
-    token: string;
-}
+const AuthContext = createContext(null);
 
-interface AuthContextValue {
-    user: AuthUser | null;
-    login: (email: string, password: string) => Promise<void>;
-    register: (username: string, email: string, password: string, role: 'buyer' | 'seller') => Promise<void>;
-    logout: () => void;
-}
-
-const AuthContext = createContext<AuthContextValue | null>(null);
-
-const USER_SERVICE = process.env.NEXT_PUBLIC_USER_SERVICE_URL!;
+const USER_SERVICE = process.env.NEXT_PUBLIC_USER_SERVICE_URL;
 const LS_KEY = 'voltline_auth';
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<AuthUser | null>(null);
+export function AuthProvider({ children }) {
+    const [user, setUser] = useState(null);
 
     // Rehydrate from localStorage on mount
     useEffect(() => {
@@ -33,7 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    const login = async (email: string, password: string) => {
+    const login = async (email, password) => {
         const res = await fetch(`${USER_SERVICE}/users/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -41,28 +28,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Login failed');
 
-        if (!res.ok) {
-            // Surface the real backend message — no generic "something went wrong"
-            throw new Error(data.message || 'Login failed');
-        }
-
-        const authUser: AuthUser = {
-            userId: data.userId,
-            role: data.role,
-            token: data.token,
-        };
-
+        const authUser = { userId: data.userId, role: data.role, token: data.token };
         setUser(authUser);
         localStorage.setItem(LS_KEY, JSON.stringify(authUser));
     };
 
-    const register = async (
-        username: string,
-        email: string,
-        password: string,
-        role: 'buyer' | 'seller'
-    ) => {
+    const register = async (username, email, password, role) => {
         const res = await fetch(`${USER_SERVICE}/users/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -70,11 +43,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Registration failed');
 
-        if (!res.ok) {
-            throw new Error(data.message || 'Registration failed');
-        }
-        // After register, auto-login
+        // Auto-login after register
         await login(email, password);
     };
 
